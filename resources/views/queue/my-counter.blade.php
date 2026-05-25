@@ -122,7 +122,49 @@
             document.addEventListener('DOMContentLoaded', function () {
                 transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
                 fetchData();
-                setInterval(fetchData, 2000); // Poll every 2 seconds
+                
+                if (window.EventSource) {
+                    const eventSource = new EventSource('{{ route("queue.stream") }}');
+                    
+                    eventSource.onopen = function() {
+                        document.getElementById('connection-status').className = 'badge bg-success rounded-pill px-3 py-2';
+                        document.getElementById('connection-status').innerHTML = '<span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true" style="width: 0.5rem; height: 0.5rem;"></span> Live (Stream)';
+                    };
+                    
+                    eventSource.addEventListener('queue_created', function(e) {
+                        fetchData();
+                    });
+                    
+                    eventSource.addEventListener('queue_updated', function(e) {
+                        try {
+                            const payload = JSON.parse(e.data);
+                            const myCounterId = {{ $user->counter_id ?? 'null' }};
+                            const myTransactionId = {{ $transaction ? $transaction->id : 'null' }};
+                            
+                            // Only trigger update if it's relevant to this counter/transaction
+                            if (
+                                payload.counter_id == myCounterId || 
+                                payload.status === 'waiting' ||
+                                payload.status === 'skipped' ||
+                                payload.status === 'cancelled'
+                            ) {
+                                if (myTransactionId === null || payload.transaction_id == myTransactionId) {
+                                    fetchData();
+                                }
+                            }
+                        } catch (err) {
+                            fetchData(); // fallback
+                        }
+                    });
+                    
+                    eventSource.onerror = function(e) {
+                        console.error('SSE Error:', e);
+                        document.getElementById('connection-status').className = 'badge bg-danger rounded-pill px-3 py-2';
+                        document.getElementById('connection-status').innerText = 'Offline (Reconnecting...)';
+                    };
+                } else {
+                    setInterval(fetchData, 2000); // Fallback for browsers without EventSource
+                }
             });
 
             function fetchData() {

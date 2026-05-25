@@ -1146,15 +1146,18 @@
                             }
                         });
                     }
+                    if (Array.isArray(response.reannouncements)) {
+                        response.reannouncements.forEach(ev => seenReannounceIds.add(ev.id));
+                    }
+                    
                     isFirstLoad = false;
                     
                     // Attempt to play welcome message
                     setTimeout(playWelcomeMessage, 500);
                 } else {
                     detectNewCallsAndAnnounce(response.transactions);
+                    processReannouncements(response.reannouncements || []);
                 }
-
-                processReannouncements(response.reannouncements || []);
             },
             error: function(err) {
                 console.error("Failed to fetch queue data", err);
@@ -1343,7 +1346,33 @@
 
     // Start fetching
     fetchQueueData();
-    setInterval(fetchQueueData, 3000);
+    
+    if (window.EventSource) {
+        const eventSource = new EventSource('{{ route("queue.stream") }}');
+        
+        eventSource.onopen = function() {
+            $('#status-text').text('Connected (Stream)');
+            $('.status-dot').removeClass('offline');
+        };
+        
+        eventSource.addEventListener('queue_created', function(e) {
+            console.log('Queue Created Event:', e.data);
+            fetchQueueData();
+        });
+        
+        eventSource.addEventListener('queue_updated', function(e) {
+            console.log('Queue Updated Event:', e.data);
+            fetchQueueData();
+        });
+        
+        eventSource.onerror = function(e) {
+            console.error('SSE Error:', e);
+            $('#status-text').text('Offline (Reconnecting...)');
+            $('.status-dot').addClass('offline');
+        };
+    } else {
+        setInterval(fetchQueueData, 3000);
+    }
 
     // Auto-reload and Enable Audio Logic
     $(document).ready(function() {

@@ -40,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['licensed'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
+        Route::get('/queue/stream', [App\Http\Controllers\QueueEventController::class, 'stream'])->name('queue.stream');
         Route::get('/live-queue-board', [App\Http\Controllers\QueueBoardController::class, 'index'])->name('live-queue-board');
         Route::get('/live-queue-board/data', [App\Http\Controllers\QueueBoardController::class, 'data'])->name('live-queue-board.data');
 

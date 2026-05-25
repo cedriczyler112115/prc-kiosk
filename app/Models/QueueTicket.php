@@ -57,6 +57,17 @@ class QueueTicket extends Model
         'transfer_service_time_seconds' => 'integer',
     ];
 
+    protected static function booted()
+    {
+        static::created(function (QueueTicket $ticket) {
+            app(\App\Services\QueueEventService::class)->handleCreated($ticket);
+        });
+
+        static::updated(function (QueueTicket $ticket) {
+            app(\App\Services\QueueEventService::class)->handleUpdated($ticket);
+        });
+    }
+
     public static function sanitizePositiveSeconds(mixed $value, int $fallback = 1): int
     {
         if (is_int($value)) {

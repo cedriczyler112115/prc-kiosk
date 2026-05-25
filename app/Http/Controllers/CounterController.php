@@ -602,6 +602,9 @@ class CounterController extends Controller
             'created_at' => now(),
         ]);
 
+        // Trigger SSE update for re-announcement
+        app(\App\Services\QueueEventService::class)->handleReannounce($ticket);
+
         return response()->json(['success' => true]);
     }
 

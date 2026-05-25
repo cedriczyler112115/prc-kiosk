@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/ext-assets/prclogo.png', function () {
     $candidates = [
-        base_path('../prc-queue/public/prclogo.png'),
-        base_path('../prc-queue/storage/app/public/prclogo.png'),
+        base_path('../public/prclogo.png'),
+        base_path('../storage/app/public/prclogo.png'),
     ];
     foreach ($candidates as $path) {
         if (file_exists($path)) {

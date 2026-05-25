@@ -51,7 +51,7 @@ class GuardEntryController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated) {
-            $transaction = Transaction::findOrFail($validated['transaction_id']);
+            $transaction = Transaction::lockForUpdate()->findOrFail($validated['transaction_id']);
 
             // Lock the table (or just query with lock) to prevent race conditions
             // We'll query for the max daily_sequence for today for this transaction code

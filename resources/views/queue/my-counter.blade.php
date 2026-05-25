@@ -372,7 +372,7 @@
                     .then(r => r.json())
                     .then(json => {
                         if (json && json.success) {
-                            fetchData();
+                            // Let SSE handle the UI refresh
                         } else {
                             alert(json && json.error ? json.error : 'Failed to update status.');
                             li.classList.remove('disabled');
@@ -427,7 +427,7 @@
                                 buttons.innerHTML = previousButtons;
                             }
                         } else {
-                            fetchData(); // Refresh immediately
+                            // Let SSE handle the UI refresh to avoid double fetching
                         }
                     })
                     .catch(error => {

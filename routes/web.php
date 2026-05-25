@@ -35,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/license/activate', [LicenseController::class, 'activate'])->name('license.activate.post');
     Route::post('/license/verify-registration-password', [LicenseController::class, 'verifyRegistrationPassword'])->name('license.verify-registration-password');
     Route::post('/license/generate-token', [LicenseController::class, 'generateToken'])->name('license.generate-token');
+    Route::post('/license/disable-activation', [LicenseController::class, 'disableActivation'])->name('license.disable-activation');
 
     Route::middleware(['licensed'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

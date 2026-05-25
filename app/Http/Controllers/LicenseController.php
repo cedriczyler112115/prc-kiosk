@@ -160,5 +160,36 @@ class LicenseController extends Controller
             return response()->json(['success' => false, 'message' => 'Exception generating token: ' . $e->getMessage()]);
         }
     }
+    public function disableActivation(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'string'],
+        ]);
+
+        $user = $request->user();
+        if (! $user || ! Hash::check($request->input('password'), $user->password)) {
+            Log::notice('license_disable_password_failed', [
+                'user_id' => $user?->id,
+            ]);
+            return back()->withErrors(['disable_password' => 'Additional authentication failed.']);
+        }
+
+        $path = base_path('.env');
+        if (file_exists($path)) {
+            $env = file_get_contents($path);
+            if (strpos($env, 'LICENSE_ENABLED=') !== false) {
+                $env = preg_replace('/^LICENSE_ENABLED=.*$/m', 'LICENSE_ENABLED=false', $env);
+            } else {
+                $env .= "\nLICENSE_ENABLED=false\n";
+            }
+            file_put_contents($path, $env);
+        }
+
+        Log::notice('license_activation_disabled', [
+            'user_id' => $user->id,
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Activation module disabled successfully.');
+    }
 }
 

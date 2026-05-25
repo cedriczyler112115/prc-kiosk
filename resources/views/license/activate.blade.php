@@ -64,6 +64,41 @@
                 If you are the project creator, generate a signed token for this device identity and paste it above.<br>
                 
             </div>
+            
+            <div class="mt-4 text-center">
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#disableActivationModal">
+                    Allow without activation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disable Activation Modal -->
+    <div class="modal fade" id="disableActivationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{{ route('license.disable-activation') }}">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Allow Without Activation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-secondary mb-3">Are you sure you want to bypass the activation? This action will disable the license requirement for this system.</p>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm Your Password</label>
+                            <input type="password" name="password" class="form-control @error('disable_password') is-invalid @enderror" required>
+                            @error('disable_password')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-3 pt-0 px-3">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Confirm</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -199,5 +234,14 @@
             });
         });
     </script>
+
+    @if($errors->has('disable_password'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var disableModal = new bootstrap.Modal(document.getElementById('disableActivationModal'));
+            disableModal.show();
+        });
+    </script>
+    @endif
 @endsection
 

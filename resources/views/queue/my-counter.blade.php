@@ -140,15 +140,17 @@
                             const payload = JSON.parse(e.data);
                             const myCounterId = {{ $user->counter_id ?? 'null' }};
                             const myTransactionId = {{ $transaction ? $transaction->id : 'null' }};
+                            const isMyCurrentTicket = (currentTicketId !== null && payload.id == currentTicketId);
                             
                             // Only trigger update if it's relevant to this counter/transaction
                             if (
+                                isMyCurrentTicket ||
                                 payload.counter_id == myCounterId || 
                                 payload.status === 'waiting' ||
                                 payload.status === 'skipped' ||
                                 payload.status === 'cancelled'
                             ) {
-                                if (myTransactionId === null || payload.transaction_id == myTransactionId) {
+                                if (isMyCurrentTicket || myTransactionId === null || payload.transaction_id == myTransactionId) {
                                     fetchData();
                                 }
                             }

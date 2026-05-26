@@ -1303,11 +1303,11 @@
 
             if (!transactions || transactions.length === 0) {
                 container.html(`
-                        <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100 text-muted" style="grid-column: 1 / -1;">
-                            <i class="bi bi-inbox fs-1"></i>
-                            <p class="mt-2">No transactions available</p>
-                        </div>
-                    `);
+                            <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100 text-muted" style="grid-column: 1 / -1;">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <p class="mt-2">No transactions available</p>
+                            </div>
+                        `);
                 return;
             }
 
@@ -1347,27 +1347,32 @@
 
                         nextHtml += `<span class="next-item">${priorityIcon}${num}</span>`;
                     });
+
+                    if (tx.total_waiting > 5) {
+                        let moreCount = tx.total_waiting - 5;
+                        nextHtml += `<span class="next-item ms-auto">+ ${moreCount} more</span>`;
+                    }
                 } else {
                     nextHtml = '<span class="text-danger fst-italic small">Waitinglist is empty!</span>';
                 }
 
                 html += `
-                        <div class="transaction-card">
-                            <div class="card-header">
-                                <div class="transaction-name" title="${tx.name}">${tx.name}</div>
-                            </div>
-                            <div class="card-body">
-                                ${servingHtml}
-                                ${counterHtml}
-                            </div>
-                            <div class="card-footer">
-                                <span class="next-label" style="margin-top:-10px !important;">Next</span>
-                                <div class="next-list">
-                                    ${nextHtml}
+                            <div class="transaction-card">
+                                <div class="card-header">
+                                    <div class="transaction-name" title="${tx.name}">${tx.name}</div>
+                                </div>
+                                <div class="card-body">
+                                    ${servingHtml}
+                                    ${counterHtml}
+                                </div>
+                                <div class="card-footer">
+                                    <span class="next-label" style="margin-top:-10px !important;">Next</span>
+                                    <div class="next-list">
+                                        ${nextHtml}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
             });
 
             // Simple DOM replacement (can be optimized)

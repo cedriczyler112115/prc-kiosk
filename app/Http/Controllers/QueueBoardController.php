@@ -59,6 +59,11 @@ class QueueBoardController extends Controller
                     ->orderByDesc('called_at')
                     ->first();
 
+                $totalWaitingCount = QueueTicket::where('transaction_id', $transaction->id)
+                    ->where('status', 'waiting')
+                    ->whereDate('created_at', today())
+                    ->count();
+
                 // Get the next 5 waiting tickets for this transaction
                 $waiting = QueueTicket::select('queues.queue_number', 'queues.priority_id')
                     ->leftJoin('priorities', 'queues.priority_id', '=', 'priorities.id')
@@ -93,6 +98,7 @@ class QueueBoardController extends Controller
                         'is_priority' => !is_null($serving->priority_id),
                     ] : null,
                     'next_in_line' => $waiting,
+                    'total_waiting' => $totalWaitingCount,
                 ];
             });
 

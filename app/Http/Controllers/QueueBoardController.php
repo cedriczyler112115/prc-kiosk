@@ -8,13 +8,13 @@ class QueueBoardController extends Controller
 {
     public static function applyPriorityLaneSuffix(string $text, mixed $priorityId): string
     {
-        $hasPriority = ! is_null($priorityId);
+        $hasPriority = !is_null($priorityId);
         if (is_string($priorityId) && trim($priorityId) === '') {
             $hasPriority = false;
         }
 
         $normalized = trim($text);
-        if (! $hasPriority) {
+        if (!$hasPriority) {
             return $normalized;
         }
 
@@ -24,10 +24,10 @@ class QueueBoardController extends Controller
 
         $suffix = 'Priority lane';
         if (str_ends_with($normalized, '.')) {
-            return $normalized.' '.$suffix.'.';
+            return $normalized . ' ' . $suffix . '.';
         }
 
-        return $normalized.' '.$suffix;
+        return $normalized . ' ' . $suffix;
     }
 
     private static function buildAnnouncement(?string $queueNumber, mixed $counterId, mixed $priorityId): string
@@ -73,11 +73,11 @@ class QueueBoardController extends Controller
                     ->limit(5)
                     ->get()
                     ->map(function ($ticket) {
-                        return [
-                            'number' => $ticket->queue_number,
-                            'is_priority' => ! is_null($ticket->priority_id),
-                        ];
-                    });
+                    return [
+                        'number' => $ticket->queue_number,
+                        'is_priority' => !is_null($ticket->priority_id),
+                    ];
+                });
 
                 return [
                     'id' => $transaction->id,
@@ -86,11 +86,11 @@ class QueueBoardController extends Controller
                         'status' => $serving->status,
                         'queue_number' => $serving->queue_number,
                         'priority_id' => $serving->priority_id,
-                        'counter_name' => $serving->counter_id ? ('Counter '.$serving->counter_id) : 'Counter ?',
+                        'counter_name' => $serving->counter_id ? ('Counter ' . $serving->counter_id) : 'Counter ?',
                         'announcement' => self::buildAnnouncement($serving->queue_number, $serving->counter_id, $serving->priority_id),
                         'called_at' => $serving->called_at ? $serving->called_at->toISOString() : null,
-                        'is_blinking' => $serving->called_at && $serving->called_at->diffInSeconds(now()) < 30,
-                        'is_priority' => ! is_null($serving->priority_id),
+                        'is_blinking' => $serving->status === 'called',
+                        'is_priority' => !is_null($serving->priority_id),
                     ] : null,
                     'next_in_line' => $waiting,
                 ];
@@ -101,7 +101,7 @@ class QueueBoardController extends Controller
             ->where('queue_logs.action', 'reannounce')
             ->whereDate('queue_logs.created_at', today())
             ->orderByDesc('queue_logs.id')
-            ->limit(20)
+            ->limit(1)
             ->get([
                 'queue_logs.id as id',
                 'queues.transaction_id as transaction_id',
@@ -118,7 +118,7 @@ class QueueBoardController extends Controller
                     'transaction_id' => (int) $r->transaction_id,
                     'queue_number' => (string) $r->queue_number,
                     'priority_id' => $r->priority_id,
-                    'counter_name' => $r->counter_id ? ('Counter '.(int) $r->counter_id) : 'Counter ?',
+                    'counter_name' => $r->counter_id ? ('Counter ' . (int) $r->counter_id) : 'Counter ?',
                     'announcement' => $announcement,
                     'created_at' => \Illuminate\Support\Carbon::parse($r->created_at)->toISOString(),
                 ];

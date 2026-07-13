@@ -180,7 +180,7 @@
               </div>
               <div class="col-md-4">
                 <label class="form-label">Counter number</label>
-                <input type="number" name="counter_number" id="edit_counter_number" class="form-control" min="1">
+                <input type="text" name="counter_number" id="edit_counter_number" class="form-control" min="1">
               </div>
             </div>
           </div>

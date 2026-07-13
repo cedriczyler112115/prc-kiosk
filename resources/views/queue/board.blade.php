@@ -111,6 +111,26 @@
             margin-bottom: 0.5rem;
         }
 
+        .ticket-entry {
+            border-bottom: 5px solid #dee2e6;
+            padding-bottom: 2.75rem;
+            margin-bottom: 2.75rem;
+            width: 100%;
+        }
+
+        /* Remove border from last entry */
+        .ticket-col .ticket-entry:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .card-body > .ticket-entry:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
         .ticket-entry .badge {
             margin-bottom: 0.5rem;
         }
@@ -1369,7 +1389,7 @@
                                 : '';
 
                             servingHtml += 
-                                '<div class="ticket-entry" style="margin-bottom: 0;">' +
+                                '<div class="ticket-entry">' +
                                     statusBadge +
                                     '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
                                         ticket.queue_number + priorityIcon +
@@ -1389,7 +1409,7 @@
                                 : '';
 
                             servingHtml += 
-                                '<div class="ticket-entry" style="margin-bottom: ' + (index === 0 ? '0.5rem' : '0') + ';">' +
+                                '<div class="ticket-entry">' +
                                     statusBadge +
                                     '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
                                         ticket.queue_number + priorityIcon +
@@ -1410,7 +1430,7 @@
                                 : '';
 
                             const entryHtml = 
-                                '<div class="ticket-entry" style="margin-bottom: ' + (index < 2 ? '0.5rem' : '0') + ';">' +
+                                '<div class="ticket-entry">' +
                                     statusBadge +
                                     '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
                                         ticket.queue_number + priorityIcon +
@@ -1442,7 +1462,7 @@
                                 : '';
 
                             const entryHtml = 
-                                '<div class="ticket-entry" style="margin-bottom: ' + (index % 2 === 0 ? '0.5rem' : '0') + ';">' +
+                                '<div class="ticket-entry">' +
                                     statusBadge +
                                     '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
                                         ticket.queue_number + priorityIcon +

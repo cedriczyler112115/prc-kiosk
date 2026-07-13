@@ -15,7 +15,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 2rem;
+            padding: 1.5rem;
         }
 
         /* Header */
@@ -43,10 +43,10 @@
         /* Transactions Grid */
         .transactions-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             grid-auto-rows: 1fr;
             /* Equal height rows */
-            gap: 1.5rem;
+            gap: 1rem;
             flex: 1;
             /* Take remaining space */
             overflow-y: auto;
@@ -74,7 +74,7 @@
         }
 
         .transaction-name {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #495057;
             margin: 0;
@@ -98,6 +98,36 @@
             font-weight: 900;
             color: #212529;
             line-height: 1;
+            text-align: center;
+        }
+
+        .ticket-entry {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .ticket-entry .badge {
+            margin-bottom: 0.5rem;
+        }
+
+        .ticket-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            width: 100%;
+            align-items: start;
+        }
+
+        .ticket-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
         .counter-display {
@@ -105,6 +135,7 @@
             font-weight: 700;
             color: var(--prc-navy-800, #003366);
             margin-top: 0.5rem;
+            text-align: center;
         }
 
         .card-footer {
@@ -472,6 +503,7 @@
 
 @section('scripts')
     <script>
+        @verbatim
         // Update Clock
         function updateClock() {
             const now = new Date();
@@ -590,7 +622,7 @@
 
         function filToSSML(text, variant) {
             const t = filApply(text, variant);
-            return `<speak><lang xml:lang="fil-PH">${t}</lang></speak>`;
+            return '<speak><lang xml:lang="fil-PH">' + t + '</lang></speak>';
         }
 
         function ttsPopulateSFX() {
@@ -904,7 +936,7 @@
             const others = [];
             tts.voices.forEach(v => {
                 const opt = { name: v.name, lang: v.lang, uri: v.voiceURI, default: v.default };
-                const label = `${v.name} (${v.lang})${v.default ? ' *' : ''}`;
+                const label = v.name + ' (' + v.lang + ')' + (v.default ? ' *' : '');
                 const isPreferred = tts.settings.langPrefs.some(pref => (v.lang || '').toLowerCase().startsWith(pref.toLowerCase()));
                 (isPreferred ? preferred : others).push({ label, value: v.voiceURI, v });
                 tts.voiceMap[v.voiceURI] = v;
@@ -1188,7 +1220,9 @@
 
         function fetchQueueData() {
             $.ajax({
+                @endverbatim
                 url: '{{ route('live-queue-board.data') }}',
+                @verbatim
                 method: 'GET',
                 success: function (response) {
                     $('.status-dot').removeClass('offline').css('background-color', '#198754');
@@ -1199,14 +1233,17 @@
                         // Populate lastAnnouncements to prevent flood, but DO NOT announce
                         if (response.transactions && Array.isArray(response.transactions)) {
                             response.transactions.forEach(tx => {
-                                if (tx && tx.serving) {
-                                    const key = String(tx.id);
-                                    const current = {
-                                        queue_number: tx.serving.queue_number || '',
-                                        called_at: tx.serving.called_at || '',
-                                        counter_name: tx.serving.counter_name || ''
-                                    };
-                                    lastAnnouncements.set(key, current);
+                                if (tx && tx.serving && Array.isArray(tx.serving)) {
+                                    const txKey = String(tx.id);
+                                    tx.serving.forEach(ticket => {
+                                        const key = txKey + '-' + ticket.queue_number + '-' + ticket.counter_name;
+                                        const current = {
+                                            queue_number: ticket.queue_number || '',
+                                            called_at: ticket.called_at || '',
+                                            counter_name: ticket.counter_name || ''
+                                        };
+                                        lastAnnouncements.set(key, current);
+                                    });
                                 }
                             });
                         }
@@ -1238,28 +1275,31 @@
         function detectNewCallsAndAnnounce(transactions) {
             if (!transactions || !Array.isArray(transactions)) return;
             transactions.forEach(tx => {
-                if (!tx || !tx.serving) return;
-                // Only announce if the ticket is newly called (blinking window) or changed
-                const key = String(tx.id);
-                const prev = lastAnnouncements.get(key);
-                const current = {
-                    queue_number: tx.serving.queue_number || '',
-                    called_at: tx.serving.called_at || '',
-                    counter_name: tx.serving.counter_name || ''
-                };
-                const changed = !prev
-                    || prev.queue_number !== current.queue_number
-                    || prev.called_at !== current.called_at;
-                if (changed && tx.serving.queue_number && tx.serving.counter_name) {
-                    console.log("New call detected:", current);
-                    lastAnnouncements.set(key, current);
-                    const spoken = tx.serving.announcement || (() => {
-                        const counterDigits = String(current.counter_name).match(/\d+/);
-                        const counterNumber = counterDigits ? counterDigits[0] : current.counter_name;
-                        return `Queue number ${current.queue_number}, please proceed to counter number ${counterNumber}.`;
-                    })();
-                    ttsEnqueue(spoken);
-                }
+                if (!tx || !tx.serving || !Array.isArray(tx.serving) || tx.serving.length === 0) return;
+                // Announce each new call in the array
+                const txKey = String(tx.id);
+                tx.serving.forEach(ticket => {
+                    const key = txKey + '-' + ticket.queue_number + '-' + ticket.counter_name;
+                    const prev = lastAnnouncements.get(key);
+                    const current = {
+                        queue_number: ticket.queue_number || '',
+                        called_at: ticket.called_at || '',
+                        counter_name: ticket.counter_name || ''
+                    };
+                    const changed = !prev
+                        || prev.queue_number !== current.queue_number
+                        || prev.called_at !== current.called_at;
+                    if (changed && ticket.queue_number && ticket.counter_name) {
+                        console.log("New call detected:", current);
+                        lastAnnouncements.set(key, current);
+                        const spoken = ticket.announcement || (() => {
+                            const counterDigits = String(current.counter_name).match(/\d+/);
+                            const counterNumber = counterDigits ? counterDigits[0] : current.counter_name;
+                            return 'Queue number ' + current.queue_number + ', please proceed to counter number ' + counterNumber + '.';
+                        })();
+                        ttsEnqueue(spoken);
+                    }
+                });
             });
         }
 
@@ -1272,7 +1312,7 @@
                 const spoken = ev.announcement || (() => {
                     const counterDigits = String(ev.counter_name || '').match(/\d+/);
                     const counterNumber = counterDigits ? counterDigits[0] : (ev.counter_name || '');
-                    return `Queue number ${ev.queue_number}, please proceed to counter number ${counterNumber}.`;
+                    return 'Queue number ' + ev.queue_number + ', please proceed to counter number ' + counterNumber + '.';
                 })();
                 ttsEnqueue(spoken);
             });
@@ -1295,88 +1335,244 @@
             if (s === 'serving') {
                 return '<span class="badge bg-success mb-2 px-3 py-2">SERVING</span>';
             }
-            return `<span class="badge bg-secondary mb-2 px-3 py-2">${String(status).toUpperCase()}</span>`;
+            return '<span class="badge bg-secondary mb-2 px-3 py-2">' + String(status).toUpperCase() + '</span>';
         }
 
         function renderTransactions(transactions) {
             const container = $('#transactions-grid');
 
             if (!transactions || transactions.length === 0) {
-                container.html(`
-                            <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100 text-muted" style="grid-column: 1 / -1;">
-                                <i class="bi bi-inbox fs-1"></i>
-                                <p class="mt-2">No transactions available</p>
-                            </div>
-                        `);
+                container.html(
+                    '<div class="d-flex flex-column justify-content-center align-items-center h-100 w-100 text-muted" style="grid-column: 1 / -1;">' +
+                        '<i class="bi bi-inbox fs-1"></i>' +
+                        '<p class="mt-2">No transactions available</p>' +
+                    '</div>'
+                );
                 return;
             }
 
+            // First pass: render all cards with a starting font size to measure
             let html = '';
             transactions.forEach(tx => {
                 // Determine content for serving
                 let servingHtml = '';
-                let counterHtml = '';
-                let blinkingClass = '';
+                const ticketCount = tx.serving && Array.isArray(tx.serving) ? tx.serving.length : 0;
 
-                if (tx.serving) {
-                    blinkingClass = tx.serving.is_blinking ? 'blinking' : '';
-                    let statusBadge = statusBadgeHtml(tx.serving.status);
-                    // Add icon if priority
-                    let priorityIcon = tx.serving.is_priority
-                        ? '<i class="bi bi-person-wheelchair priority-icon" aria-label="Priority"></i>'
-                        : '';
+                if (ticketCount > 0) {
+                    if (ticketCount === 1) {
+                        // 1 ticket: centered single column
+                        tx.serving.forEach(ticket => {
+                            const blinkingClass = ticket.is_blinking ? 'blinking' : '';
+                            const statusBadge = statusBadgeHtml(ticket.status);
+                            const priorityIcon = ticket.is_priority
+                                ? '<i class="bi bi-person-wheelchair priority-icon" aria-label="Priority"></i>'
+                                : '';
 
-                    servingHtml = `${statusBadge}<div class="current-queue-number ${blinkingClass}">${tx.serving.queue_number}${priorityIcon}</div>`;
-                    counterHtml = `<div class="counter-display">${tx.serving.counter_name}</div>`;
+                            servingHtml += 
+                                '<div class="ticket-entry" style="margin-bottom: 0;">' +
+                                    statusBadge +
+                                    '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.queue_number + priorityIcon +
+                                    '</div>' +
+                                    '<div class="counter-display" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.counter_name +
+                                    '</div>' +
+                                '</div>';
+                        });
+                    } else if (ticketCount === 2) {
+                        // 2 tickets: vertical stack, 1 above 2
+                        tx.serving.forEach((ticket, index) => {
+                            const blinkingClass = ticket.is_blinking ? 'blinking' : '';
+                            const statusBadge = statusBadgeHtml(ticket.status);
+                            const priorityIcon = ticket.is_priority
+                                ? '<i class="bi bi-person-wheelchair priority-icon" aria-label="Priority"></i>'
+                                : '';
+
+                            servingHtml += 
+                                '<div class="ticket-entry" style="margin-bottom: ' + (index === 0 ? '0.5rem' : '0') + ';">' +
+                                    statusBadge +
+                                    '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.queue_number + priorityIcon +
+                                    '</div>' +
+                                    '<div class="counter-display" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.counter_name +
+                                    '</div>' +
+                                '</div>';
+                        });
+                    } else if (ticketCount === 3) {
+                        // 3 tickets: left column (1, 2), right column (3)
+                        let col1 = '', col2 = '';
+                        tx.serving.forEach((ticket, index) => {
+                            const blinkingClass = ticket.is_blinking ? 'blinking' : '';
+                            const statusBadge = statusBadgeHtml(ticket.status);
+                            const priorityIcon = ticket.is_priority
+                                ? '<i class="bi bi-person-wheelchair priority-icon" aria-label="Priority"></i>'
+                                : '';
+
+                            const entryHtml = 
+                                '<div class="ticket-entry" style="margin-bottom: ' + (index < 2 ? '0.5rem' : '0') + ';">' +
+                                    statusBadge +
+                                    '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.queue_number + priorityIcon +
+                                    '</div>' +
+                                    '<div class="counter-display" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.counter_name +
+                                    '</div>' +
+                                '</div>';
+
+                            if (index < 2) {
+                                col1 += entryHtml;
+                            } else {
+                                col2 += entryHtml;
+                            }
+                        });
+                        servingHtml = 
+                            '<div class="ticket-columns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">' +
+                                '<div class="ticket-col" style="display: flex; flex-direction: column; align-items: center;">' + col1 + '</div>' +
+                                '<div class="ticket-col" style="display: flex; flex-direction: column; align-items: center;">' + col2 + '</div>' +
+                            '</div>';
+                    } else if (ticketCount === 4) {
+                        // 4 tickets: left column (1,2), right column (3,4)
+                        let col1 = '', col2 = '';
+                        tx.serving.forEach((ticket, index) => {
+                            const blinkingClass = ticket.is_blinking ? 'blinking' : '';
+                            const statusBadge = statusBadgeHtml(ticket.status);
+                            const priorityIcon = ticket.is_priority
+                                ? '<i class="bi bi-person-wheelchair priority-icon" aria-label="Priority"></i>'
+                                : '';
+
+                            const entryHtml = 
+                                '<div class="ticket-entry" style="margin-bottom: ' + (index % 2 === 0 ? '0.5rem' : '0') + ';">' +
+                                    statusBadge +
+                                    '<div class="current-queue-number ' + blinkingClass + '" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.queue_number + priorityIcon +
+                                    '</div>' +
+                                    '<div class="counter-display" data-tx-id="' + tx.id + '" data-ticket-q="' + ticket.queue_number + '">' +
+                                        ticket.counter_name +
+                                    '</div>' +
+                                '</div>';
+
+                            if (index < 2) {
+                                col1 += entryHtml;
+                            } else {
+                                col2 += entryHtml;
+                            }
+                        });
+                        servingHtml = 
+                            '<div class="ticket-columns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">' +
+                                '<div class="ticket-col" style="display: flex; flex-direction: column; align-items: center;">' + col1 + '</div>' +
+                                '<div class="ticket-col" style="display: flex; flex-direction: column; align-items: center;">' + col2 + '</div>' +
+                            '</div>';
+                    }
                 } else {
-                    servingHtml = `<div class="current-queue-number text-muted" style="opacity: 0.3;">--</div>`;
-                    counterHtml = `<div class="counter-display text-muted" style="opacity: 0.5; font-size: 1rem; font-weight: bold;">NO ACTIVE SERVING</div>`;
+                    servingHtml = 
+                        '<div class="ticket-entry">' +
+                            '<div class="current-queue-number text-muted" style="opacity: 0.3;">--</div>' +
+                            '<div class="counter-display text-muted" style="opacity: 0.5; font-weight: bold;">NO ACTIVE SERVING</div>' +
+                        '</div>';
                 }
 
-                // Determine content for next in line
                 let nextHtml = '';
                 if (tx.next_in_line && tx.next_in_line.length > 0) {
                     tx.next_in_line.forEach(item => {
-                        // Check if item is object (new format) or string (fallback/old format)
                         let num = item.number || item;
                         let isPriority = item.is_priority || false;
-
                         let priorityIcon = isPriority
                             ? '<i class="bi bi-person-wheelchair priority-icon" aria-label="Priority"></i>'
                             : '';
 
-                        nextHtml += `<span class="next-item">${priorityIcon}${num}</span>`;
+                        nextHtml += '<span class="next-item">' + priorityIcon + num + '</span>';
                     });
 
                     if (tx.total_waiting > 5) {
                         let moreCount = tx.total_waiting - 5;
-                        nextHtml += `<span class="next-item ms-auto">+ ${moreCount} more</span>`;
+                        nextHtml += '<span class="next-item ms-auto">+ ' + moreCount + ' more</span>';
                     }
                 } else {
                     nextHtml = '<span class="text-danger fst-italic small">Waitinglist is empty!</span>';
                 }
 
-                html += `
-                            <div class="transaction-card">
-                                <div class="card-header">
-                                    <div class="transaction-name" title="${tx.name}">${tx.name}</div>
-                                </div>
-                                <div class="card-body">
-                                    ${servingHtml}
-                                    ${counterHtml}
-                                </div>
-                                <div class="card-footer">
-                                    <span class="next-label" style="margin-top:-10px !important;">Next</span>
-                                    <div class="next-list">
-                                        ${nextHtml}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                html += 
+                    '<div class="transaction-card" data-tx-id="' + tx.id + '">' +
+                        '<div class="card-header">' +
+                            '<div class="transaction-name" title="' + tx.name + '">' + tx.name + '</div>' +
+                        '</div>' +
+                        '<div class="card-body" data-tx-id="' + tx.id + '">' +
+                            servingHtml +
+                        '</div>' +
+                        '<div class="card-footer">' +
+                            '<span class="next-label" style="margin-top:-10px !important;">Next</span>' +
+                            '<div class="next-list">' +
+                                nextHtml +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
             });
 
-            // Simple DOM replacement (can be optimized)
             container.html(html);
+
+            // Second pass: calculate optimal font size for each transaction's card body
+            transactions.forEach(tx => {
+                const ticketCount = tx.serving && Array.isArray(tx.serving) ? tx.serving.length : 0;
+                if (ticketCount === 0) return;
+
+                const card = container.find('.transaction-card[data-tx-id="' + tx.id + '"]');
+                const cardBody = card.find('.card-body');
+                const cardHeader = card.find('.card-header');
+                const cardFooter = card.find('.card-footer');
+                const entries = cardBody.find('.ticket-entry');
+
+                // Binary search for optimal font size
+                let minFontSize = 0.5;
+                let maxFontSize = 10;
+                let optimalFontSize = 5;
+                let ratio = 2.5; // queueNumberFontSize / counterDisplayFontSize ratio (5rem / 2rem = 2.5)
+
+                // Apply temporary styles to measure
+                let test = (queueSize) => {
+                    cardBody.css({
+                        'display': 'flex',
+                        'flex-direction': 'column',
+                        'justify-content': 'center',
+                        'align-items': 'center',
+                        'overflow': 'hidden',
+                        'height': 'auto'
+                    });
+
+                    entries.each((idx, el) => {
+                        const qNum = $(el).find('.current-queue-number');
+                        const cDisplay = $(el).find('.counter-display');
+                        qNum.css({
+                            'font-size': queueSize + 'rem',
+                            'line-height': '1.1',
+                            'margin-bottom': '0.25rem'
+                        });
+                        cDisplay.css({
+                            'font-size': (queueSize / ratio) + 'rem'
+                        });
+                    });
+
+                    // Calculate available space
+                    const totalHeight = card.outerHeight(true);
+                    const availableHeight = card.height() - cardHeader.outerHeight(true) - cardFooter.outerHeight(true) - 20; // add some padding
+                    const contentHeight = cardBody.outerHeight(true);
+                    return contentHeight < availableHeight;
+                };
+
+                // Perform binary search
+                for (let i = 0; i < 50; i++) {
+                    const mid = (minFontSize + maxFontSize) / 2;
+                    if (test(mid)) {
+                        optimalFontSize = mid;
+                        minFontSize = mid;
+                    } else {
+                        maxFontSize = mid;
+                    }
+                }
+
+                // Apply final optimal font size
+                test(optimalFontSize * 0.95); // 95% to ensure no overflow
+            });
         }
 
         // Initial load and polling
@@ -1416,8 +1612,10 @@
         // Start fetching
         fetchQueueData();
 
+        @endverbatim
         if (window.EventSource) {
             const eventSource = new EventSource('{{ route("queue.stream") }}');
+            @verbatim
 
             eventSource.onopen = function () {
                 $('#status-text').text('Connected (Stream)');
@@ -1462,5 +1660,6 @@
                 }, 1000);
             }
         });
+        @endverbatim
     </script>
 @endsection

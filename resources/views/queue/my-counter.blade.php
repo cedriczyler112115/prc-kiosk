@@ -71,7 +71,7 @@
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 text-secondary fw-bold">Next</h5>
-                        <span badge bg-primary rounded-pill>Waiting Tickets: <span class="badge bg-primary rounded-pill"
+                        <span class="badge bg-primary rounded-pill">Waiting Tickets: <span class="badge bg-primary rounded-pill"
                                 id="waiting-count">0</span></span>
                     </div>
                     <div class="card-body p-0 overflow-auto bg-light" style="max-height: 600px;">
@@ -138,9 +138,10 @@
                     eventSource.addEventListener('queue_updated', function (e) {
                         try {
                             const payload = JSON.parse(e.data);
-                            const myCounterId = {{ $user->counter_id ?? 'null' }};
-                            const myTransactionId = {{ $transaction ? $transaction->id : 'null' }};
-                            const isMyCurrentTicket = (currentTicketId !== null && payload.id == currentTicketId);
+
+                            const myCounterId = @json($user->counter_id);
+                            const myTransactionId = @json($transaction?->id);
+                            const isMyCurrentTicket = currentTicketId !== null && payload.id == currentTicketId;
 
                             // Only trigger update if it's relevant to this counter/transaction
                             if (
@@ -256,6 +257,9 @@
                     actionButtons = `
                                                 <button class="btn btn-primary btn-lg px-5 py-3 shadow-sm" onclick="performAction('complete')">
                                                     <i class="bi bi-check-circle me-2"></i> Complete
+                                                </button>
+                                                <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
+                                                    <i class="bi bi-megaphone me-2"></i> Call Again
                                                 </button>
                                                 <button class="btn btn-warning btn-lg px-4 py-3 shadow-sm text-dark" onclick="showTransferModal()">
                                                     <i class="bi bi-arrow-left-right me-2"></i> Transfer

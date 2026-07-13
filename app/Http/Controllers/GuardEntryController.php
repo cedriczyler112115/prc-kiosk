@@ -204,8 +204,8 @@ class GuardEntryController extends Controller
                     ->orWhere('t.name', 'like', "%{$search}%")
                     ->orWhere('p.name', 'like', "%{$search}%");
 
-                if (ctype_digit($search)) {
-                    $q->orWhere('queues.counter_id', (int) $search);
+                if (trim($search) !== '') {
+                    $q->orWhere('queues.counter_id', $search);
                 }
             });
         }

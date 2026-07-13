@@ -31,7 +31,7 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s\-\.]+,(\s[a-zA-Z\s\-\.]+)+$/'],
             'transaction_id' => ['nullable', 'exists:transactions,id'],
-            'counter_id' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'counter_id' => ['nullable', 'string', 'max:10'],
         ], [
             'name.regex' => 'The full name must be in "Lastname, Firstname Middlename" format.',
         ]);

@@ -92,7 +92,7 @@ class CounterController extends Controller
         $validated = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'transaction_id' => ['nullable', 'integer', 'exists:transactions,id'],
-            'counter_number' => ['nullable', 'integer', 'min:1'],
+            'counter_number' => ['nullable', 'string', 'max:50'],
             'access_level_id' => ['required', 'integer', 'exists:access_level_library,id'],
         ]);
 
@@ -115,7 +115,7 @@ class CounterController extends Controller
     {
         $validated = $request->validate([
             'transaction_id' => ['nullable', 'integer', 'exists:transactions,id'],
-            'counter_number' => ['nullable', 'integer', 'min:1'],
+            'counter_number' => ['nullable', 'string', 'max:50'],
             'access_level_id' => ['required', 'integer', 'exists:access_level_library,id'],
         ]);
 

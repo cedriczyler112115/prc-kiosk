@@ -354,11 +354,11 @@
                     color: black !important;
                     background: white;
                   }
-                  .header { font-weight: bold; font-size: 10px; margin-bottom: 10px; line-height: 1.5; }
-                  .queue-number { font-size: 48px; font-weight: 900; margin-top: 5px; display: block; }
-                  .meta { font-size: 9px; margin-bottom: 0px; }
-                  .transaction-name { font-size: 12px; margin-bottom: 5px; }
-                  .footer { font-size: 10px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 5px; }
+                  .header { font-weight: bold; font-size: 18px; margin-bottom: 10px; line-height: 1.5; }
+                  .queue-number { font-size: 60px; font-weight: 900; margin-top: 5px; display: block; }
+                  .meta { font-weight: bold;font-size: 16px; margin-bottom: 0px; }
+                  .transaction-name { font-weight: bold;font-size: 20px; margin-bottom: 5px; }
+                  .footer { font-weight: bold;font-size: 12px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 5px; }
                 </style>
               </head>
               <body>
@@ -366,7 +366,7 @@
                 <div class="meta">${ticket.created_at}</div>
                 <div class="queue-number">${ticket.queue_number}</div>
                 <div class="transaction-name">${ticket.transaction_name} ${ticket.priority_name ? '(' + ticket.priority_name + ')' : ''}</div>
-                <div class="footer">Please wait for your number to be called.</div>
+                <div class="footer">Please wait for your number to be called.<br><br></div>
                 <script>
                   window.onload = function() {
                     window.focus();

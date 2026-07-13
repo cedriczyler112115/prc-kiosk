@@ -33,7 +33,7 @@ class QueueBoardController extends Controller
     private static function buildAnnouncement(?string $queueNumber, mixed $counterId, mixed $priorityId): string
     {
         $q = trim((string) ($queueNumber ?? ''));
-        $counterNumber = $counterId ? (string) (int) $counterId : '?';
+        $counterNumber = $counterId ? (string) $counterId : '?';
         $base = "Queue number {$q}, please proceed to counter number {$counterNumber}";
 
         return self::applyPriorityLaneSuffix($base, $priorityId);
@@ -51,13 +51,25 @@ class QueueBoardController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function ($transaction) {
-                // Get the latest serving ticket for this transaction
+                // Get ALL serving/called tickets for this transaction
                 $serving = QueueTicket::query()
                     ->where('transaction_id', $transaction->id)
                     ->whereIn('status', ['called', 'serving'])
                     ->whereDate('created_at', today())
                     ->orderByDesc('called_at')
-                    ->first();
+                    ->get()
+                    ->map(function ($ticket) {
+                        return [
+                            'status' => $ticket->status,
+                            'queue_number' => $ticket->queue_number,
+                            'priority_id' => $ticket->priority_id,
+                            'counter_name' => $ticket->counter_id ? ('Counter ' . $ticket->counter_id) : 'Counter ?',
+                            'announcement' => self::buildAnnouncement($ticket->queue_number, $ticket->counter_id, $ticket->priority_id),
+                            'called_at' => $ticket->called_at ? $ticket->called_at->toISOString() : null,
+                            'is_blinking' => $ticket->status === 'called',
+                            'is_priority' => !is_null($ticket->priority_id),
+                        ];
+                    });
 
                 $totalWaitingCount = QueueTicket::where('transaction_id', $transaction->id)
                     ->where('status', 'waiting')
@@ -87,16 +99,7 @@ class QueueBoardController extends Controller
                 return [
                     'id' => $transaction->id,
                     'name' => $transaction->name,
-                    'serving' => $serving ? [
-                        'status' => $serving->status,
-                        'queue_number' => $serving->queue_number,
-                        'priority_id' => $serving->priority_id,
-                        'counter_name' => $serving->counter_id ? ('Counter ' . $serving->counter_id) : 'Counter ?',
-                        'announcement' => self::buildAnnouncement($serving->queue_number, $serving->counter_id, $serving->priority_id),
-                        'called_at' => $serving->called_at ? $serving->called_at->toISOString() : null,
-                        'is_blinking' => $serving->status === 'called',
-                        'is_priority' => !is_null($serving->priority_id),
-                    ] : null,
+                    'serving' => $serving,
                     'next_in_line' => $waiting,
                     'total_waiting' => $totalWaitingCount,
                 ];
@@ -124,7 +127,7 @@ class QueueBoardController extends Controller
                     'transaction_id' => (int) $r->transaction_id,
                     'queue_number' => (string) $r->queue_number,
                     'priority_id' => $r->priority_id,
-                    'counter_name' => $r->counter_id ? ('Counter ' . (int) $r->counter_id) : 'Counter ?',
+                    'counter_name' => $r->counter_id ? ('Counter ' . (string) $r->counter_id) : 'Counter ?',
                     'announcement' => $announcement,
                     'created_at' => \Illuminate\Support\Carbon::parse($r->created_at)->toISOString(),
                 ];

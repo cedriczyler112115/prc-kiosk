@@ -44,7 +44,6 @@ class QueueTicket extends Model
         'transfer_service_completed_at' => 'datetime',
         'transaction_id' => 'integer',
         'priority_id' => 'integer',
-        'counter_id' => 'integer',
         'daily_sequence' => 'integer',
         'called_by' => 'integer',
         'serving_by' => 'integer',

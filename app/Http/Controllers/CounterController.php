@@ -9,11 +9,26 @@ use App\Models\User;
 use App\Services\TransferPriorityMapper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class CounterController extends Controller
 {
+    /**
+     * How long (seconds) the per-counter data response is cached.
+     * Keeps multiple rapid SSE events from hammering the DB with identical queries.
+     */
+    private const COUNTER_DATA_TTL = 3;
+
+    /**
+     * File-cache key for a specific counter's data snapshot.
+     * Used by QueueEventService to bust the cache the instant a relevant event fires.
+     */
+    public static function counterDataCacheKey(mixed $counterId, mixed $transactionId): string
+    {
+        return 'counter_data_' . $counterId . '_' . $transactionId;
+    }
     public function index(Request $request)
     {
         $transactions = Transaction::query()
@@ -176,49 +191,59 @@ class CounterController extends Controller
             return response()->json(['error' => 'No transaction or counter assigned'], 403);
         }
 
-        $currentTicket = QueueTicket::with(['transaction', 'priority'])
-            ->where('counter_id', $user->counter_id)
-            ->whereIn('status', ['called', 'serving'])
-            ->whereDate('created_at', today())
-            ->orderBy('id', 'desc')
-            ->first();
+        // Cache the response per (counter_id, transaction_id) for COUNTER_DATA_TTL seconds.
+        // This collapses burst SSE events (e.g., multiple rapid calls) into a single DB
+        // round-trip per counter. The cache is busted by QueueEventService when an event
+        // affecting this counter fires, so data stays accurate within one polling cycle.
+        $cacheKey = self::counterDataCacheKey($user->counter_id, $user->transaction_id);
 
-        $waitingTickets = QueueTicket::select('queues.*')
-            ->leftJoin('priorities', 'queues.priority_id', '=', 'priorities.id')
-            ->where('queues.transaction_id', $user->transaction_id)
-            ->where('queues.status', 'waiting')
-            ->whereDate('queues.created_at', today())
-            ->orderByRaw('CASE WHEN priorities.priority_level IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('priorities.priority_level', 'asc')
-            ->orderBy('queues.is_transfer', 'desc')
-            ->orderBy('queues.transfer_priority_score', 'desc')
-            ->orderBy('queues.id', 'asc')
-            ->with(['priority', 'transaction'])
-            ->limit(50)
-            ->get();
+        $data = Cache::remember($cacheKey, self::COUNTER_DATA_TTL, function () use ($user) {
+            $currentTicket = QueueTicket::with(['transaction', 'priority'])
+                ->where('counter_id', $user->counter_id)
+                ->whereIn('status', ['called', 'serving'])
+                ->whereDate('created_at', today())
+                ->orderBy('id', 'desc')
+                ->first();
 
-        $skippedTickets = QueueTicket::query()
-            ->where('transaction_id', $user->transaction_id)
-            ->where('status', 'skipped')
-            ->whereDate('created_at', today())
-            ->orderBy('id', 'desc')
-            ->limit(10)
-            ->get(['id', 'queue_number', 'created_at']);
+            $waitingTickets = QueueTicket::select('queues.*')
+                ->leftJoin('priorities', 'queues.priority_id', '=', 'priorities.id')
+                ->where('queues.transaction_id', $user->transaction_id)
+                ->where('queues.status', 'waiting')
+                ->whereDate('queues.created_at', today())
+                ->orderByRaw('CASE WHEN priorities.priority_level IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('priorities.priority_level', 'asc')
+                ->orderBy('queues.is_transfer', 'desc')
+                ->orderBy('queues.transfer_priority_score', 'desc')
+                ->orderBy('queues.id', 'asc')
+                ->with(['priority', 'transaction'])
+                ->limit(50)
+                ->get();
 
-        $cancelledTickets = QueueTicket::query()
-            ->where('transaction_id', $user->transaction_id)
-            ->where('status', 'cancelled')
-            ->whereDate('created_at', today())
-            ->orderBy('id', 'desc')
-            ->limit(10)
-            ->get(['id', 'queue_number', 'created_at']);
+            $skippedTickets = QueueTicket::query()
+                ->where('transaction_id', $user->transaction_id)
+                ->where('status', 'skipped')
+                ->whereDate('created_at', today())
+                ->orderBy('id', 'desc')
+                ->limit(10)
+                ->get(['id', 'queue_number', 'created_at']);
 
-        return response()->json([
-            'current' => $currentTicket,
-            'waiting' => $waitingTickets,
-            'skipped' => $skippedTickets,
-            'cancelled' => $cancelledTickets,
-        ]);
+            $cancelledTickets = QueueTicket::query()
+                ->where('transaction_id', $user->transaction_id)
+                ->where('status', 'cancelled')
+                ->whereDate('created_at', today())
+                ->orderBy('id', 'desc')
+                ->limit(10)
+                ->get(['id', 'queue_number', 'created_at']);
+
+            return [
+                'current'   => $currentTicket,
+                'waiting'   => $waitingTickets,
+                'skipped'   => $skippedTickets,
+                'cancelled' => $cancelledTickets,
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function callNext(Request $request)

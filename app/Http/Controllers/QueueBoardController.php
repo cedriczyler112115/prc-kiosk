@@ -3,9 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\QueueTicket;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class QueueBoardController extends Controller
 {
+    /**
+     * Cache key used by QueueEventService to bust the board data cache
+     * the moment any queue event fires, ensuring stale data is never served
+     * for more than one polling cycle.
+     */
+    public const BOARD_DATA_CACHE_KEY = 'queue_board_data';
+
+    /**
+     * How many seconds the board data is cached.
+     * Set low enough that a manual page refresh feels live,
+     * but high enough to collapse concurrent requests from multiple boards.
+     */
+    private const BOARD_DATA_TTL = 5;
+
     public static function applyPriorityLaneSuffix(string $text, mixed $priorityId): string
     {
         $hasPriority = !is_null($priorityId);
@@ -45,6 +61,27 @@ class QueueBoardController extends Controller
     }
 
     public function data()
+    {
+        // Serve from cache when available — this collapses all concurrent board
+        // requests (multiple TVs, multiple browser tabs) into a single DB round-trip
+        // every BOARD_DATA_TTL seconds instead of one per request.
+        //
+        // The cache is busted by QueueEventService::broadcastEvent() the instant
+        // any queue event fires, so real-time accuracy is maintained.
+        $payload = Cache::remember(
+            self::BOARD_DATA_CACHE_KEY,
+            self::BOARD_DATA_TTL,
+            fn () => $this->buildPayload()
+        );
+
+        return response()->json($payload);
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    private function buildPayload(): array
     {
         $transactions = \App\Models\Transaction::where('is_active', true)
             ->orderBy('workflow_order')
@@ -105,7 +142,7 @@ class QueueBoardController extends Controller
                 ];
             });
 
-        $reannounces = \DB::table('queue_logs')
+        $reannounces = DB::table('queue_logs')
             ->join('queues', 'queue_logs.queue_id', '=', 'queues.id')
             ->where('queue_logs.action', 'reannounce')
             ->whereDate('queue_logs.created_at', today())
@@ -133,9 +170,9 @@ class QueueBoardController extends Controller
                 ];
             });
 
-        return response()->json([
+        return [
             'transactions' => $transactions,
             'reannouncements' => $reannounces,
-        ]);
+        ];
     }
 }

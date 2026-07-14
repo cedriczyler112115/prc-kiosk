@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Controllers\QueueBoardController;
 use App\Models\QueueTicket;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -54,8 +55,8 @@ class QueueEventService
     }
 
     /**
-     * Store the event in Cache for SSE to pick up.
-     * In the future, this is where Laravel Broadcasting or WebSockets would be called.
+     * Store the event in Cache for SSE to pick up and simultaneously
+     * bust the board-data cache so the next board poll gets fresh data.
      */
     protected function broadcastEvent(string $eventName, array $payload)
     {
@@ -66,15 +67,22 @@ class QueueEventService
             'timestamp' => microtime(true),
         ];
 
-        // Store an array of recent events to prevent missed events in the SSE 1-second polling gap
+        // Store an array of recent events to prevent missed events in the SSE 1-second polling gap.
         $events = Cache::get('recent_queue_events', []);
         $events[] = $eventData;
-        
-        // Keep only last 50 events
+
+        // Keep only last 50 events.
         if (count($events) > 50) {
             array_shift($events);
         }
-        
+
         Cache::put('recent_queue_events', $events, now()->addMinutes(5));
+
+        // Bust the board data cache so the next /live-queue-board/data request
+        // rebuilds with fresh DB data instead of serving stale cached output.
+        // This ensures the board reflects the change within one polling cycle (≤3 s),
+        // while still collapsing all concurrent board requests between events into a
+        // single DB round-trip.
+        Cache::forget(QueueBoardController::BOARD_DATA_CACHE_KEY);
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\EnsureLicensed;
 use App\Models\InstallationLicense;
 use App\Services\DeviceFingerprint;
 use App\Services\LicenseToken;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -98,6 +100,9 @@ class LicenseController extends Controller
             ]
         );
 
+        // Bust the file-cache so EnsureLicensed re-verifies immediately.
+        Cache::forget(EnsureLicensed::cacheKey($currentHash));
+
         Log::notice('license_activation_success', [
             'user_id' => $user->id,
             'device_hash' => $currentHash,
@@ -183,6 +188,14 @@ class LicenseController extends Controller
                 $env .= "\nLICENSE_ENABLED=false\n";
             }
             file_put_contents($path, $env);
+        }
+
+        // Bust the file-cache so EnsureLicensed picks up the disabled state immediately.
+        $device = app(DeviceFingerprint::class);
+        $mac = $device->currentMacAddress();
+        $hash = $device->macHash($mac);
+        if ($hash !== null) {
+            Cache::forget(EnsureLicensed::cacheKey($hash));
         }
 
         Log::notice('license_activation_disabled', [

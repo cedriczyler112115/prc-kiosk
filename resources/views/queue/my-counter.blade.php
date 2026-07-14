@@ -132,7 +132,16 @@
                     };
 
                     eventSource.addEventListener('queue_created', function (e) {
-                        fetchData();
+                        // Only refetch if a new ticket is created for MY transaction type.
+                        try {
+                            const payload = JSON.parse(e.data);
+                            const myTransactionId = @json($transaction?->id);
+                            if (myTransactionId === null || payload.transaction_id == myTransactionId) {
+                                fetchData();
+                            }
+                        } catch (err) {
+                            fetchData(); // parse error fallback
+                        }
                     });
 
                     eventSource.addEventListener('queue_updated', function (e) {
@@ -143,20 +152,23 @@
                             const myTransactionId = @json($transaction?->id);
                             const isMyCurrentTicket = currentTicketId !== null && payload.id == currentTicketId;
 
-                            // Only trigger update if it's relevant to this counter/transaction
-                            if (
+                            // Only trigger a DB fetch when the event is relevant to this counter.
+                            // Ignoring unrelated events dramatically reduces myCounterData() DB calls.
+                            const isRelevant =
                                 isMyCurrentTicket ||
-                                payload.counter_id == myCounterId ||
-                                payload.status === 'waiting' ||
-                                payload.status === 'skipped' ||
-                                payload.status === 'cancelled'
-                            ) {
-                                if (isMyCurrentTicket || myTransactionId === null || payload.transaction_id == myTransactionId) {
-                                    fetchData();
-                                }
+                                (payload.counter_id != null && payload.counter_id == myCounterId) ||
+                                (
+                                    (myTransactionId === null || payload.transaction_id == myTransactionId) &&
+                                    (payload.status === 'waiting' || payload.status === 'skipped' || payload.status === 'cancelled')
+                                );
+
+                            if (isRelevant) {
+                                fetchData();
                             }
                         } catch (err) {
-                            fetchData(); // fallback
+                            // Do NOT auto-fetch on parse errors — that makes every malformed event
+                            // trigger a DB round-trip. Log and wait for the next real event.
+                            console.warn('SSE parse error:', err);
                         }
                     });
 
@@ -166,7 +178,9 @@
                         document.getElementById('connection-status').innerText = 'Offline (Reconnecting...)';
                     };
                 } else {
-                    setInterval(fetchData, 2000); // Fallback for browsers without EventSource
+                    // Fallback polling — increased from 2 s to 5 s to reduce DB pressure
+                    // on browsers/environments that don't support EventSource.
+                    setInterval(fetchData, 5000);
                 }
             });
 

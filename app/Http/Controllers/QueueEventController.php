@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class QueueEventController extends Controller
@@ -14,6 +15,12 @@ class QueueEventController extends Controller
     public function stream(Request $request)
     {
         $response = new StreamedResponse(function () use ($request) {
+            // Immediately release the MySQL connection.
+            // The loop only reads from file-based Cache — no DB queries are made here.
+            // Without this, each SSE client permanently occupies a DB connection slot
+            // for the entire session, which exhausts Hostinger's 500-connection limit.
+            DB::disconnect();
+
             // Keep connection alive indefinitely
             set_time_limit(0);
             

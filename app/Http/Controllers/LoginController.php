@@ -59,19 +59,9 @@ class LoginController extends Controller
 
     public function ping(Request $request)
     {
-        if (! Auth::check()) {
-            return Response::noContent(401);
-        }
-
-        $now = time();
-        $last = (int) $request->session()->get('auth_refreshed_at', 0);
-        $rotateAfterSeconds = 60 * 60 * 24;
-
-        if ($last <= 0 || ($now - $last) >= $rotateAfterSeconds) {
-            $request->session()->migrate(true);
-            $request->session()->put('auth_refreshed_at', $now);
-        }
-
+        // The 'auth' middleware already verified the user before reaching this method.
+        // We simply return 200 to keep the session alive — no DB query needed.
+        // The session driver is file-based, so there is zero MySQL cost here.
         return Response::noContent();
     }
 }

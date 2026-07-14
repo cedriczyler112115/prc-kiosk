@@ -258,6 +258,9 @@
                                                 <button class="btn btn-primary btn-lg px-5 py-3 shadow-sm" onclick="performAction('complete')">
                                                     <i class="bi bi-check-circle me-2"></i> Complete
                                                 </button>
+                                                <button class="btn btn-secondary btn-lg px-4 py-3 shadow-sm" onclick="performAction('skip')">
+                                                    <i class="bi bi-skip-forward me-2"></i> Skip
+                                                </button>                                                
                                                 <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
                                                     <i class="bi bi-megaphone me-2"></i> Call Again
                                                 </button>

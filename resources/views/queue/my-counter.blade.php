@@ -2,6 +2,36 @@
 
 @section('title', 'My Counter')
 
+@push('styles')
+    <style>
+        :root {
+            --counter-card-height: 620px;
+        }
+
+        .counter-fixed-card {
+            height: var(--counter-card-height);
+            min-height: var(--counter-card-height);
+            max-height: var(--counter-card-height);
+        }
+
+        .counter-scroll-area {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .counter-card-body {
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .counter-fixed-card .card-header,
+        .counter-fixed-card .card-footer {
+            flex-shrink: 0;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -31,27 +61,33 @@
         </div>
 
         <div class="row g-4 align-items-stretch">
-            <div class="col-lg-2">
-                <div class="card h-100 shadow-sm border-0" aria-labelledby="statusCombinedHeading">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 text-secondary fw-bold">Skipped</h5>
-                    </div>
-                    <div class="card-body p-2">
-                        <ul class="list-group list-group-flush" id="status-list" aria-live="polite"
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0" aria-labelledby="statusCombinedHeading">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="mb-0 text-secondary fw-bold">Skipped</h5>
+                </div>
+
+                <div class="card-body p-3">
+                    <div style="height: 600px; overflow-y: auto;">
+                        <ul class="list-group list-group-flush" id="status-list"
+                            aria-live="polite"
                             aria-relevant="additions text">
-                            <li class="list-group-item text-center py-3 text-muted bg-transparent">None</li>
+                            <li class="list-group-item text-center py-3 text-muted bg-transparent">
+                                None
+                            </li>
                         </ul>
                     </div>
                 </div>
             </div>
+        </div>
             <!-- Current Transaction -->
             <div class="col-lg-6">
-                <div class="card h-100 shadow-sm border-0">
+                <div class="card h-100 shadow-sm border-0 d-flex flex-column counter-fixed-card">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h5 class="mb-0 text-secondary fw-bold">Current Transaction</h5>
                     </div>
-                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-5 position-relative"
-                        id="current-ticket-panel" style="min-height: 400px;">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-5 position-relative flex-grow-1 counter-card-body"
+                        id="current-ticket-panel">
                         <!-- Dynamic Content will be injected here -->
                         <div class="text-muted">
                             <div class="spinner-border text-primary mb-3" role="status"></div>
@@ -67,20 +103,23 @@
             </div>
 
             <!-- Next in Line -->
-            <div class="col-lg-4">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-secondary fw-bold">Next</h5>
-                        <span class="badge bg-primary rounded-pill">Waiting Tickets: <span class="badge bg-primary rounded-pill"
-                                id="waiting-count">0</span></span>
-                    </div>
-                    <div class="card-body p-0 overflow-auto bg-light" style="max-height: 600px;">
-                        <ul class="list-group list-group-flush" id="waiting-list">
-                            <!-- Dynamic List -->
-                        </ul>
-                    </div>
-                </div>
-            </div>
+<div class="col-lg-3">
+    <div class="card h-100 shadow-sm border-0 d-flex flex-column counter-fixed-card">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-secondary fw-bold">Next</h5>
+            <span class="badge bg-primary rounded-pill">
+                Waiting Tickets:
+                <span class="badge bg-primary rounded-pill" id="waiting-count">0</span>
+            </span>
+        </div>
+
+        <div class="card-body p-0 bg-light">
+            <ul class="list-group list-group-flush waiting-list-scroll" id="waiting-list">
+                <!-- Dynamic List -->
+            </ul>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
@@ -255,7 +294,7 @@
                                                     <i class="bi bi-play-circle me-2"></i> Serve
                                                 </button>
                                                 <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
-                                                    <i class="bi bi-megaphone me-2"></i>Call Again
+                                                    <i class="bi bi-megaphone me-2"></i> <br>Call&nbsp;Again
                                                 </button>
                                                 <button class="btn btn-secondary btn-lg px-4 py-3 shadow-sm" onclick="performAction('skip')">
                                                     <i class="bi bi-skip-forward me-2"></i> Skip
@@ -276,7 +315,7 @@
                                                     <i class="bi bi-skip-forward me-2"></i> Skip
                                                 </button>                                                
                                                 <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
-                                                    <i class="bi bi-megaphone me-2"></i> Call Again
+                                                    <i class="bi bi-megaphone me-2"></i><br>Call&nbsp;Again
                                                 </button>
                                                 <button class="btn btn-warning btn-lg px-4 py-3 shadow-sm text-dark" onclick="showTransferModal()">
                                                     <i class="bi bi-arrow-left-right me-2"></i> Transfer
@@ -332,8 +371,7 @@
                 const items = []
                     .concat((skipped || []).map(t => ({ ...t, _status: 'skipped' })))
                     .concat((cancelled || []).map(t => ({ ...t, _status: 'cancelled' })))
-                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                    .slice(0, 10);
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 if (items.length === 0) {
                     list.innerHTML = `<li class="list-group-item text-center py-3 text-muted bg-transparent">No skipped/cancelled tickets</li>`;
                     return;

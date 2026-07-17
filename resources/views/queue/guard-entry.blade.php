@@ -100,6 +100,12 @@
     .priority-row.active {
       display: block;
     }
+    .custom-switch {
+        transform: scale(3);              /* Adjust size as needed */
+        transform-origin: left center;
+        cursor: pointer;
+        margin-top: 0.15rem;              /* Optional: better vertical alignment */
+    }    
   </style>
 
   <!-- Print Area (Hidden by default) -->
@@ -147,12 +153,20 @@
 <br>
   <div class="card border-0 shadow-sm mb-3">
     <div class="card-body">
-      <div class="d-flex align-items-center gap-3 mb-4">
-        <div class="form-check form-switch fs-4 m-0">
-          <input class="form-check-input" type="checkbox" id="globalSpecial" aria-controls="priorityGlobalRow" aria-expanded="false">
-          <label class="form-check-label fw-bold" for="globalSpecial">Special Lane</label>
-        </div>
-      </div>
+<div class="d-flex align-items-center gap-3 mb-4 mt-4">
+    <div class="form-check form-switch m-0">
+        <input
+            class="form-check-input custom-switch"
+            type="checkbox"
+            id="globalSpecial"
+            aria-controls="priorityGlobalRow"
+            aria-expanded="false">
+
+        <label class="form-check-label fw-bold fs-4 ms-3" for="globalSpecial" style="margin-left: 4.5rem !important;margin-top: -1.15rem;">
+            Special Lane
+        </label>
+    </div>
+</div>
 
       <div id="priorityGlobalRow" class="priority-row" aria-live="polite">
         <div class="row row-cols-1 row-cols-md-3 g-4" role="radiogroup" aria-label="Select priority">
@@ -182,10 +196,10 @@
       </div>
     </div>
   </div><br>
-  <div class="mt-4 d-flex align-items-center gap-2">
+  <div class="mt-4 d-flex align-items-center gap-2" style="justify-content: center;">
    
-    <button type="button" id="submitSelection" class="btn btn-success" style="width: 100%;height:60px;font-size:25px" disabled aria-disabled="true"> <i class="bi bi-printer"></i> 
-      Queue and Print
+    <button type="button" id="submitSelection" class="btn btn-success" style="width: 100%;height:100px;font-size:40px;align-items: center;" disabled aria-disabled="true"> <i class="bi bi-printer"></i> 
+      Print
     </button>
   </div>
   <div id="selectionStatus" class="small text-muted mt-2" aria-live="polite"></div>

@@ -216,7 +216,7 @@ class CounterController extends Controller
                 ->orderBy('queues.transfer_priority_score', 'desc')
                 ->orderBy('queues.id', 'asc')
                 ->with(['priority', 'transaction'])
-                ->limit(50)
+                ->limit(10)
                 ->get();
 
             $skippedTickets = QueueTicket::query()
@@ -224,7 +224,7 @@ class CounterController extends Controller
                 ->where('status', 'skipped')
                 ->whereDate('created_at', today())
                 ->orderBy('id', 'desc')
-                ->limit(10)
+                //->limit(10)
                 ->get(['id', 'queue_number', 'created_at']);
 
             $cancelledTickets = QueueTicket::query()

@@ -74,7 +74,7 @@ class GuardEntryController extends Controller
             $nextSequence = ($lastTicket ? $lastTicket->daily_sequence : 0) + 1;
 
             // Format: CODE + 4-digit sequence (e.g. ABC0005)
-            $queueNumber = $transaction->code.str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+            $queueNumber = $transaction->code.str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
 
             $ticket = QueueTicket::create([
                 'transaction_id' => $transaction->id,

@@ -5,8 +5,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuardEntryController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PriorityController;
+use App\Http\Controllers\QueueEventController;
 use App\Http\Controllers\QueueLogController;
+use App\Http\Controllers\TauriAuthController;
 use App\Http\Controllers\TransactionController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ext-assets/prclogo.png', function () {
@@ -47,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::middleware(['role:Administrator,Staff'])->group(function () {
             Route::get('/my-counter', [CounterController::class, 'myCounter'])->name('my-counter');
+            Route::get('/my-counter/app-mode', [CounterController::class, 'myCounterAppMode'])->name('my-counter.app-mode');
             Route::get('/my-counter/data', [CounterController::class, 'myCounterData'])->name('my-counter.data');
             Route::post('/my-counter/call', [CounterController::class, 'callNext'])->name('my-counter.call');
             Route::post('/my-counter/serve', [CounterController::class, 'serve'])->name('my-counter.serve');
@@ -86,4 +90,42 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/account/profile', [App\Http\Controllers\ProfileController::class, 'index'])->name('account.profile');
     Route::patch('/account/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('account.profile.update');
     Route::put('/account/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('password.update');
+});
+
+/*
+ |──────────────────────────────────────────────────────────────────────────────
+ | Tauri Desktop App — Token-Based Authentication
+ |
+ | These routes use Laravel Sanctum token auth instead of web sessions.
+ | The Tauri app stores the bearer token in encrypted local storage and
+ | replays it on every launch for auto-login.
+ |──────────────────────────────────────────────────────────────────────────────
+ */
+Route::prefix('api/tauri')
+    ->name('tauri.')
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->group(function () {
+    // Public: issue a token (login)
+    Route::post('/login', [TauriAuthController::class, 'login'])->name('login');
+
+    // Protected: verify token + get user context, logout
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/verify',  [TauriAuthController::class, 'verify'])->name('verify');
+        Route::post('/logout', [TauriAuthController::class, 'logout'])->name('logout');
+
+        Route::prefix('counter')->name('counter.')->group(function () {
+            Route::get('/data', [CounterController::class, 'myCounterData'])->name('data');
+            Route::post('/call', [CounterController::class, 'callNext'])->name('call');
+            Route::post('/serve', [CounterController::class, 'serve'])->name('serve');
+            Route::post('/complete', [CounterController::class, 'complete'])->name('complete');
+            Route::post('/transfer', [CounterController::class, 'transfer'])->name('transfer');
+            Route::post('/skip', [CounterController::class, 'skip'])->name('skip');
+            Route::post('/cancel', [CounterController::class, 'cancel'])->name('cancel');
+            Route::post('/recall-skipped', [CounterController::class, 'recallSkipped'])->name('recall-skipped');
+            Route::post('/reannounce', [CounterController::class, 'reannounce'])->name('reannounce');
+            Route::post('/restore-cancelled', [CounterController::class, 'restoreCancelled'])->name('restore-cancelled');
+        });
+    });
+
+    Route::get('/counter/stream', [QueueEventController::class, 'tauriStream'])->name('counter.stream');
 });

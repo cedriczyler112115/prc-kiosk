@@ -51,12 +51,18 @@
                     </span>
                 </div>
             </div>
-            <div>
+            <div class="d-flex align-items-center gap-2">
                 <span id="connection-status" class="badge bg-success rounded-pill px-3 py-2">
                     <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"
                         style="width: 0.5rem; height: 0.5rem;"></span>
                     Live
                 </span>
+                <a href="{{ route('queue.my-counter.app-mode') }}" target="_blank"
+                   class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                   title="Open in App Mode (Tauri-ready, no navigation)">
+                    <i class="bi bi-fullscreen"></i>
+                    <span class="d-none d-sm-inline">Open in App Mode</span>
+                </a>
             </div>
         </div>
 
@@ -294,7 +300,7 @@
                                                     <i class="bi bi-play-circle me-2"></i> Serve
                                                 </button>
                                                 <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
-                                                    <i class="bi bi-megaphone me-2"></i> <br>Call&nbsp;Again
+                                                    <i class="bi bi-megaphone me-2"></i> <br>Re-Call
                                                 </button>
                                                 <button class="btn btn-secondary btn-lg px-4 py-3 shadow-sm" onclick="performAction('skip')">
                                                     <i class="bi bi-skip-forward me-2"></i> Skip
@@ -315,7 +321,7 @@
                                                     <i class="bi bi-skip-forward me-2"></i> Skip
                                                 </button>                                                
                                                 <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
-                                                    <i class="bi bi-megaphone me-2"></i><br>Call&nbsp;Again
+                                                    <i class="bi bi-megaphone me-2"></i><br>Again
                                                 </button>
                                                 <button class="btn btn-warning btn-lg px-4 py-3 shadow-sm text-dark" onclick="showTransferModal()">
                                                     <i class="bi bi-arrow-left-right me-2"></i> Transfer

@@ -71,7 +71,7 @@ class QueueBoardController extends Controller
         $payload = Cache::remember(
             self::BOARD_DATA_CACHE_KEY,
             self::BOARD_DATA_TTL,
-            fn () => $this->buildPayload()
+            fn() => $this->buildPayload()
         );
 
         return response()->json($payload);
@@ -83,11 +83,21 @@ class QueueBoardController extends Controller
 
     private function buildPayload(): array
     {
+        // Ticket IDs that were re-announced in the last 30 s.
+        // These stay in 'serving' status but should blink red on the board
+        // just like a freshly called ticket.
+        $recentlyReannounced = DB::table('queue_logs')
+            ->where('action', 'reannounce')
+            ->where('created_at', '>=', now()->subSeconds(30))
+            ->pluck('queue_id')
+            ->flip()          // turn into a hash-set for O(1) lookup
+            ->toArray();
+
         $transactions = \App\Models\Transaction::where('is_active', true)
             ->orderBy('workflow_order')
             ->orderBy('name')
             ->get()
-            ->map(function ($transaction) {
+            ->map(function ($transaction) use ($recentlyReannounced) {
                 // Get ALL serving/called tickets for this transaction
                 $serving = QueueTicket::query()
                     ->where('transaction_id', $transaction->id)
@@ -95,18 +105,20 @@ class QueueBoardController extends Controller
                     ->whereDate('created_at', today())
                     ->orderByDesc('called_at')
                     ->get()
-                    ->map(function ($ticket) {
-                        return [
-                            'status' => $ticket->status,
-                            'queue_number' => $ticket->queue_number,
-                            'priority_id' => $ticket->priority_id,
-                            'counter_name' => $ticket->counter_id ? ('Counter ' . $ticket->counter_id) : 'Counter ?',
-                            'announcement' => self::buildAnnouncement($ticket->queue_number, $ticket->counter_id, $ticket->priority_id),
-                            'called_at' => $ticket->called_at ? $ticket->called_at->toISOString() : null,
-                            'is_blinking' => $ticket->status === 'called',
-                            'is_priority' => !is_null($ticket->priority_id),
-                        ];
-                    });
+                    ->map(function ($ticket) use ($recentlyReannounced) {
+                    return [
+                        'status' => $ticket->status,
+                        'queue_number' => $ticket->queue_number,
+                        'priority_id' => $ticket->priority_id,
+                        'counter_name' => $ticket->counter_id ? ('Counter ' . $ticket->counter_id) : 'Counter ?',
+                        'announcement' => self::buildAnnouncement($ticket->queue_number, $ticket->counter_id, $ticket->priority_id),
+                        'called_at' => $ticket->called_at ? $ticket->called_at->toISOString() : null,
+                        // Blink when: freshly called OR serving but just re-announced
+                        'is_blinking' => $ticket->status === 'called'
+                            || ($ticket->status === 'serving' && array_key_exists($ticket->id, $recentlyReannounced)),
+                        'is_priority' => !is_null($ticket->priority_id),
+                    ];
+                });
 
                 $totalWaitingCount = QueueTicket::where('transaction_id', $transaction->id)
                     ->where('status', 'waiting')

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class QueueEventController extends Controller
@@ -13,6 +14,47 @@ class QueueEventController extends Controller
      * Stream queue events using Server-Sent Events (SSE).
      */
     public function stream(Request $request)
+    {
+        return $this->makeStreamResponse($request);
+    }
+
+    /**
+     * Stream queue events for the Tauri desktop app.
+     * EventSource cannot send an Authorization header, so the token is accepted
+     * through the query string and validated explicitly here.
+     */
+    public function tauriStream(Request $request)
+    {
+        $plainTextToken = (string) $request->query('token', '');
+
+        if ($plainTextToken === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing desktop token.',
+            ], 401);
+        }
+
+        $accessToken = PersonalAccessToken::findToken($plainTextToken);
+        $user = $accessToken?->tokenable;
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Desktop token is invalid or expired.',
+            ], 401);
+        }
+
+        if (! $user->transaction_id || ! $user->counter_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Counter assignment missing.',
+            ], 403);
+        }
+
+        return $this->makeStreamResponse($request);
+    }
+
+    private function makeStreamResponse(Request $request): StreamedResponse
     {
         $response = new StreamedResponse(function () use ($request) {
             // Immediately release the MySQL connection.

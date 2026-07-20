@@ -184,6 +184,27 @@ class CounterController extends Controller
         ]);
     }
 
+    public function myCounterAppMode()
+    {
+        $user = Auth::user();
+        if (! $user->transaction_id) {
+            return redirect()->route('dashboard')->with('error', 'You are not assigned to any transaction.');
+        }
+        if (! $user->counter_id) {
+            return redirect()->route('dashboard')->with('error', 'You are not assigned to any counter.');
+        }
+
+        $transactions = Transaction::where('is_active', true)
+            ->where('id', '!=', $user->transaction_id)
+            ->get(['id', 'name']);
+
+        return view('queue.my-counter-app', [
+            'user'         => $user,
+            'transaction'  => $user->transaction,
+            'transactions' => $transactions,
+        ]);
+    }
+
     public function myCounterData()
     {
         $user = Auth::user();

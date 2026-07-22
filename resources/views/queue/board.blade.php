@@ -1519,11 +1519,12 @@
                             const entries = cardBody.find('.ticket-entry');
 
                             const isMultiRow = ticketCount >= 2;
+                            const is2Calls = ticketCount === 2;
                             const is4Calls = ticketCount === 4;
 
-                            // Font size bounds: 2 and 3 calls share the same font scale; 4 calls use a smaller scale
+                            // Font size bounds: 1 call: 8, 2 calls: 4.8 (bigger than 3 calls), 3 calls: 3.2, 4 calls: 2.1
                             let minFontSize = 0.5;
-                            let maxFontSize = is4Calls ? 2.1 : (isMultiRow ? 3.2 : 8);
+                            let maxFontSize = is4Calls ? 2.1 : (is2Calls ? 4.8 : (isMultiRow ? 3.2 : 8));
                             let optimalFontSize = maxFontSize;
 
                             // Apply temporary styles to measure
@@ -1531,7 +1532,7 @@
                                 cardBody.css({
                                     'display': 'flex',
                                     'flex-direction': 'column',
-                                    'justify-content': isMultiRow ? 'flex-start' : 'center',
+                                    'justify-content': is2Calls ? 'center' : (isMultiRow ? 'flex-start' : 'center'),
                                     'align-items': 'center',
                                     'overflow': 'hidden',
                                     'height': 'auto'
@@ -1550,14 +1551,14 @@
                                             'margin-bottom': '0'
                                         });
                                         cDisplay.css({
-                                            'font-size': Math.max(0.8, queueSize * 0.65) + 'rem',
+                                            'font-size': Math.max(0.8, queueSize * (is2Calls ? 0.42 : 0.65)) + 'rem',
                                             'line-height': '1',
                                             'margin-top': '0'
                                         });
-                                        const badgeScale = is4Calls ? 0.42 : 0.52;
+                                        const badgeScale = is4Calls ? 0.42 : (is2Calls ? 0.32 : 0.52);
                                         badge.css({
                                             'font-size': Math.max(0.65, queueSize * badgeScale) + 'rem',
-                                            'padding': is4Calls ? '0.15rem 0.35rem' : '0.25rem 0.5rem'
+                                            'padding': (is4Calls || is2Calls) ? '0.15rem 0.35rem' : '0.25rem 0.5rem'
                                         });
                                     } else {
                                         qNum.css({

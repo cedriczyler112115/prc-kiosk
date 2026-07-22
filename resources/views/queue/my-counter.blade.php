@@ -57,35 +57,28 @@
                         style="width: 0.5rem; height: 0.5rem;"></span>
                     Live
                 </span>
-                <a href="{{ route('queue.my-counter.app-mode') }}" target="_blank"
-                   class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-                   title="Open in App Mode (Tauri-ready, no navigation)">
-                    <i class="bi bi-fullscreen"></i>
-                    <span class="d-none d-sm-inline">Open in App Mode</span>
-                </a>
             </div>
         </div>
 
         <div class="row g-4 align-items-stretch">
-        <div class="col-lg-3">
-            <div class="card shadow-sm border-0" aria-labelledby="statusCombinedHeading">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h5 class="mb-0 text-secondary fw-bold">Skipped</h5>
-                </div>
+            <div class="col-lg-3">
+                <div class="card shadow-sm border-0" aria-labelledby="statusCombinedHeading">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h5 class="mb-0 text-secondary fw-bold">Skipped</h5>
+                    </div>
 
-                <div class="card-body p-3">
-                    <div style="height: 600px; overflow-y: auto;">
-                        <ul class="list-group list-group-flush" id="status-list"
-                            aria-live="polite"
-                            aria-relevant="additions text">
-                            <li class="list-group-item text-center py-3 text-muted bg-transparent">
-                                None
-                            </li>
-                        </ul>
+                    <div class="card-body p-3">
+                        <div style="height: 600px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush" id="status-list" aria-live="polite"
+                                aria-relevant="additions text">
+                                <li class="list-group-item text-center py-3 text-muted bg-transparent">
+                                    None
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
             <!-- Current Transaction -->
             <div class="col-lg-6">
                 <div class="card h-100 shadow-sm border-0 d-flex flex-column counter-fixed-card">
@@ -109,23 +102,23 @@
             </div>
 
             <!-- Next in Line -->
-<div class="col-lg-3">
-    <div class="card h-100 shadow-sm border-0 d-flex flex-column counter-fixed-card">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 text-secondary fw-bold">Next</h5>
-            <span class="badge bg-primary rounded-pill">
-                Waiting Tickets:
-                <span class="badge bg-primary rounded-pill" id="waiting-count">0</span>
-            </span>
-        </div>
+            <div class="col-lg-3">
+                <div class="card h-100 shadow-sm border-0 d-flex flex-column counter-fixed-card">
+                    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-secondary fw-bold">Next</h5>
+                        <span class="badge bg-primary rounded-pill">
+                            Waiting Tickets:
+                            <span class="badge bg-primary rounded-pill" id="waiting-count">0</span>
+                        </span>
+                    </div>
 
-        <div class="card-body p-0 bg-light">
-            <ul class="list-group list-group-flush waiting-list-scroll" id="waiting-list">
-                <!-- Dynamic List -->
-            </ul>
-        </div>
-    </div>
-</div>
+                    <div class="card-body p-0 bg-light">
+                        <ul class="list-group list-group-flush waiting-list-scroll" id="waiting-list">
+                            <!-- Dynamic List -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -251,17 +244,17 @@
                 if (!ticket) {
                     currentTicketId = null;
                     panel.innerHTML = `
-                                                <div class="text-muted opacity-50">
-                                                    <i class="bi bi-inbox display-1"></i>
-                                                    <h3 class="mt-3">No Active Transaction</h3>
-                                                    <p>Click "Call Next" to start serving.</p>
-                                                </div>
-                                            `;
+                                                        <div class="text-muted opacity-50">
+                                                            <i class="bi bi-inbox display-1"></i>
+                                                            <h3 class="mt-3">No Active Transaction</h3>
+                                                            <p>Click "Call Next" to start serving.</p>
+                                                        </div>
+                                                    `;
                     buttons.innerHTML = `
-                                                <button class="btn btn-primary btn-lg px-5 py-3 shadow-sm" onclick="performAction('call')">
-                                                    <i class="bi bi-megaphone me-2"></i> Call Next
-                                                </button>
-                                            `;
+                                                        <button class="btn btn-primary btn-lg px-5 py-3 shadow-sm" onclick="performAction('call')">
+                                                            <i class="bi bi-megaphone me-2"></i> Call Next
+                                                        </button>
+                                                    `;
                     return;
                 }
 
@@ -281,52 +274,52 @@
 
                 const nameHtml = ticket.name ? `<span class="ms-3 fs-3 text-muted">${ticket.name}</span>` : '';
                 panel.innerHTML = `
-                                            ${statusBadge}
-                                            <h1 class="display-1 fw-bold mb-0 text-dark d-flex align-items-center justify-content-center" style="font-size: 6rem;">
-                                                <span>${ticket.queue_number}${priorityIcon}</span>${nameHtml}
-                                            </h1>
-                                            <div class="mt-4 text-muted">
-                                                <i class="bi bi-clock me-1"></i> 
-                                                Called: ${new Date(ticket.called_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </div>
-                                        `;
+                                                    ${statusBadge}
+                                                    <h1 class="display-1 fw-bold mb-0 text-dark d-flex align-items-center justify-content-center" style="font-size: 6rem;">
+                                                        <span>${ticket.queue_number}${priorityIcon}</span>${nameHtml}
+                                                    </h1>
+                                                    <div class="mt-4 text-muted">
+                                                        <i class="bi bi-clock me-1"></i> 
+                                                        Called: ${new Date(ticket.called_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                `;
 
                 // Buttons based on status
                 let actionButtons = '';
 
                 if (ticket.status === 'called') {
                     actionButtons = `
-                                                <button class="btn btn-success btn-lg px-4 py-3 shadow-sm" onclick="performAction('serve')">
-                                                    <i class="bi bi-play-circle me-2"></i> Serve
-                                                </button>
-                                                <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
-                                                    <i class="bi bi-megaphone me-2"></i> <br>Re-Call
-                                                </button>
-                                                <button class="btn btn-secondary btn-lg px-4 py-3 shadow-sm" onclick="performAction('skip')">
-                                                    <i class="bi bi-skip-forward me-2"></i> Skip
-                                                </button>
-                                                <button class="btn btn-danger btn-lg px-4 py-3 shadow-sm" onclick="performAction('cancel')">
-                                                    <i class="bi bi-x-circle me-2"></i> Cancel
-                                                </button>
-                                                <button class="btn btn-warning btn-lg px-4 py-3 shadow-sm text-dark" onclick="showTransferModal()">
-                                                    <i class="bi bi-arrow-left-right me-2"></i> Transfer
-                                                </button>
-                                            `;
+                                                        <button class="btn btn-success btn-lg px-4 py-3 shadow-sm" onclick="performAction('serve')">
+                                                            <i class="bi bi-play-circle me-2"></i> Serve
+                                                        </button>
+                                                        <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
+                                                            <i class="bi bi-megaphone me-2"></i> <br>Re-Call
+                                                        </button>
+                                                        <button class="btn btn-secondary btn-lg px-4 py-3 shadow-sm" onclick="performAction('skip')">
+                                                            <i class="bi bi-skip-forward me-2"></i> Skip
+                                                        </button>
+                                                        <button class="btn btn-danger btn-lg px-4 py-3 shadow-sm" onclick="performAction('cancel')">
+                                                            <i class="bi bi-x-circle me-2"></i> Cancel
+                                                        </button>
+                                                        <button class="btn btn-warning btn-lg px-4 py-3 shadow-sm text-dark" onclick="showTransferModal()">
+                                                            <i class="bi bi-arrow-left-right me-2"></i> Transfer
+                                                        </button>
+                                                    `;
                 } else if (ticket.status === 'serving') {
                     actionButtons = `
-                                                <button class="btn btn-primary btn-lg px-5 py-3 shadow-sm" onclick="performAction('complete')">
-                                                    <i class="bi bi-check-circle me-2"></i> Complete
-                                                </button>
-                                                <button class="btn btn-secondary btn-lg px-4 py-3 shadow-sm" onclick="performAction('skip')">
-                                                    <i class="bi bi-skip-forward me-2"></i> Skip
-                                                </button>                                                
-                                                <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
-                                                    <i class="bi bi-megaphone me-2"></i><br>Again
-                                                </button>
-                                                <button class="btn btn-warning btn-lg px-4 py-3 shadow-sm text-dark" onclick="showTransferModal()">
-                                                    <i class="bi bi-arrow-left-right me-2"></i> Transfer
-                                                </button>
-                                            `;
+                                                        <button class="btn btn-primary btn-lg px-5 py-3 shadow-sm" onclick="performAction('complete')">
+                                                            <i class="bi bi-check-circle me-2"></i> Complete
+                                                        </button>
+                                                        <button class="btn btn-secondary btn-lg px-4 py-3 shadow-sm" onclick="performAction('skip')">
+                                                            <i class="bi bi-skip-forward me-2"></i> Skip
+                                                        </button>                                                
+                                                        <button class="btn btn-outline-primary btn-lg px-4 py-3 shadow-sm" onclick="performAction('reannounce')" title="Re-announce current call">
+                                                            <i class="bi bi-megaphone me-2"></i><br>Again
+                                                        </button>
+                                                        <button class="btn btn-warning btn-lg px-4 py-3 shadow-sm text-dark" onclick="showTransferModal()">
+                                                            <i class="bi bi-arrow-left-right me-2"></i> Transfer
+                                                        </button>
+                                                    `;
                 }
 
                 buttons.innerHTML = actionButtons;
@@ -340,11 +333,11 @@
 
                 if (tickets.length === 0) {
                     list.innerHTML = `
-                                                <li class="list-group-item text-center py-5 text-muted bg-transparent">
-                                                    <i class="bi bi-cup-hot display-6 mb-3 d-block opacity-50"></i>
-                                                    No waiting tickets
-                                                </li>
-                                            `;
+                                                        <li class="list-group-item text-center py-5 text-muted bg-transparent">
+                                                            <i class="bi bi-cup-hot display-6 mb-3 d-block opacity-50"></i>
+                                                            No waiting tickets
+                                                        </li>
+                                                    `;
                     return;
                 }
 
@@ -358,15 +351,15 @@
 
                     const nameHtml = ticket.name ? `<span class="text-muted ms-4">( ${ticket.name} )</span>` : '';
                     html += `
-                                                <li class="list-group-item d-flex justify-content-between align-items-center py-3 ${priorityClass}">
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="fw-bold fs-5 text-dark">${ticket.queue_number}</span>${nameHtml}
-                                                    </div>
-                                                    <small class="text-muted">
-                                                       ${priorityIcon} ${new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </small>
-                                                </li>
-                                            `;
+                                                        <li class="list-group-item d-flex justify-content-between align-items-center py-3 ${priorityClass}">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="fw-bold fs-5 text-dark">${ticket.queue_number}</span>${nameHtml}
+                                                            </div>
+                                                            <small class="text-muted">
+                                                               ${priorityIcon} ${new Date(ticket.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </small>
+                                                        </li>
+                                                    `;
                 });
                 list.innerHTML = html;
             }
@@ -393,11 +386,11 @@
                         ? `data-ticket-id="${t.id}" data-status="${t._status}" role="button" tabindex="0" aria-label="Recall skipped ticket ${t.queue_number}"`
                         : `aria-disabled="true" style="cursor: not-allowed; opacity: .9;"`;
                     html += `
-                                                <li class="${liClass}" ${attrs}>
-                                                    <div class="d-flex align-items-center">${badge}<span class="fw-bold">${t.queue_number}</span></div>
-                                                    <small class="text-muted">${new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
-                                                </li>
-                                            `;
+                                                        <li class="${liClass}" ${attrs}>
+                                                            <div class="d-flex align-items-center">${badge}<span class="fw-bold">${t.queue_number}</span></div>
+                                                            <small class="text-muted">${new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                                                        </li>
+                                                    `;
                 });
                 list.innerHTML = html;
                 // Attach click handlers

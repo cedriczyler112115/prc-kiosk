@@ -1277,9 +1277,9 @@
             function fetchQueueData() {
                 $.ajax({
         @endverbatim
-                                                                                                                                                                url: '{{ route('live-queue-board.data') }}',
+                                                                                                                                                                    url: '{{ route('live-queue-board.data') }}',
                 @verbatim
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                method: 'GET',
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                method: 'GET',
                             success: function (response) {
                                 $('.status-dot').removeClass('offline').css('background-color', '#198754');
                                 $('#status-text').text('Connected');
@@ -1321,8 +1321,8 @@
                                 $('.status-dot').addClass('offline').css('background-color', '#dc3545');
                                 $('#status-text').text('Reconnecting...');
                             }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            });
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
 
                     // Track recent calls to avoid duplicate announcements
                     const lastAnnouncements = new Map(); // key: transactionId, value: {queue_number, called_at}
@@ -1387,7 +1387,7 @@
                         const s = String(status).toLowerCase();
                         const badgePadding = isCompact ? 'px-2 py-1' : 'px-3 py-2';
                         if (s === 'called') {
-                            return '<span class="badge bg-warning text-dark ' + badgePadding + '">CALLED</span>';
+                            return '<span class="badge bg-warning text-dark ' + badgePadding + '">CALLING</span>';
                         }
                         if (s === 'serving') {
                             return '<span class="badge bg-success ' + badgePadding + '">SERVING</span>';

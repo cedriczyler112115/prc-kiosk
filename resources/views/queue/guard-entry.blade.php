@@ -431,40 +431,40 @@
             const doc = $iframe[0].contentWindow.document;
             doc.open();
             doc.write(`
-                                              <html>
-                                              <head>
-                                                <style>
-                                                  @page { size: 80mm auto; margin: 0; }
-                                                  body { 
-                                                    font-family: 'Courier New', monospace; 
-                                                    width: 72mm; 
-                                                    margin: 2mm auto; 
-                                                    text-align: center; 
-                                                    color: black !important;
-                                                    background: white;
-                                                  }
-                                                  .header { font-weight: bold; font-size: 12px; margin-bottom: 10px; line-height: 1.5; }
-                                                  .queue-number { font-size: 60px; font-weight: 900; margin-top: 5px; display: block; }
-                                                  .meta { font-weight: bold;font-size: 16px; margin-bottom: 0px; }
-                                                  .transaction-name { font-weight: bold;font-size: 20px; margin-bottom: 5px; }
-                                                  .footer { font-weight: bold;font-size: 12px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 5px; }
-                                                </style>
-                                              </head>
-                                              <body>
-                                                <div class="header">Professional Regulation Commission</div>
-                                                <div class="meta">${ticket.created_at}</div>
-                                                <div class="queue-number">${ticket.queue_number}</div>
-                                                <div class="transaction-name">${ticket.transaction_name} ${ticket.priority_name ? '(' + ticket.priority_name + ')' : ''}</div>
-                                                <div class="footer">Please wait for your number to be called.<br><br></div>
-                                                <script>
-                                                  window.onload = function() {
-                                                    window.focus();
-                                                    window.print();
-                                                  };
-                                                <\/script>
-                                              </body>
-                                              </html>
-                                            `);
+                                                  <html>
+                                                  <head>
+                                                    <style>
+                                                      @page { size: 80mm auto; margin: 0; }
+                                                      body { 
+                                                        font-family: 'Courier New', monospace; 
+                                                        width: 72mm; 
+                                                        margin: 2mm auto; 
+                                                        text-align: center; 
+                                                        color: black !important;
+                                                        background: white;
+                                                      }
+                                                      .header { font-weight: bold; font-size: 12px; margin-bottom: 10px; line-height: 1.5; }
+                                                      .queue-number { font-size: 60px; font-weight: 900; margin-top: 5px; display: block; }
+                                                      .meta { font-weight: bold;font-size: 16px; margin-bottom: 0px; }
+                                                      .transaction-name { font-weight: bold;font-size: 20px; margin-bottom: 5px; }
+                                                      .footer { font-weight: bold;font-size: 12px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 5px; }
+                                                    </style>
+                                                  </head>
+                                                  <body>
+                                                    <div class="header">Professional Regulation Commission</div>
+                                                    <div class="meta">${ticket.created_at}</div>
+                                                    <div class="queue-number">${ticket.queue_number}</div>
+                                                    <div class="transaction-name">${ticket.transaction_name} ${ticket.priority_name ? '(' + ticket.priority_name + ')' : ''}</div>
+                                                    <div class="footer">Please wait for your number to be called.<br><br></div>
+                                                    <script>
+                                                      window.onload = function() {
+                                                        window.focus();
+                                                        window.print();
+                                                      };
+                                                    <\/script>
+                                                  </body>
+                                                  </html>
+                                                `);
             doc.close();
 
             // Reset form immediately (printing is handled by browser/OS)
@@ -503,39 +503,39 @@
         const doc = $iframe[0].contentWindow.document;
         doc.open();
         doc.write(`
-          <html>
-          <head>
-            <style>
-              @page { size: 80mm auto; margin: 0; }
-              body {
-                font-family: 'Courier New', monospace;
-                width: 72mm;
-                margin: 2mm auto;
-                text-align: center;
-                color: black !important;
-                background: white;
-              }
-              .header        { font-weight: bold; font-size: 12px; margin-bottom: 10px; line-height: 1.5; }
-              .queue-number  { font-size: 60px; font-weight: 900; margin-top: 5px; display: block; }
-              .meta          { font-weight: bold; font-size: 16px; margin-bottom: 0px; }
-              .transaction-name { font-weight: bold; font-size: 20px; margin-bottom: 5px; }
-              .footer        { font-weight: bold; font-size: 12px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 5px; }
-              .reprint-note  { font-size: 11px; color: #000000; margin-top: 4px; }
-            </style>
-          </head>
-          <body>
-            <div class="header">Professional Regulation Commission</div>
-            <div class="meta">${ticket.created_at}</div>
-            <div class="queue-number">${ticket.queue_number}</div>
-            <div class="transaction-name">${ticket.transaction_name}${ticket.priority_name ? ' (' + ticket.priority_name + ')' : ''}</div>
-            <div class="footer">Please wait for your number to be called.<br><br></div>
-            <div class="reprint-note">[RE-PRINT]</div>
-            <script>
-              window.onload = function() { window.focus(); window.print(); };
-            <\/script>
-          </body>
-          </html>
-        `);
+              <html>
+              <head>
+                <style>
+                  @page { size: 80mm auto; margin: 0; }
+                  body {
+                    font-family: 'Courier New', monospace;
+                    width: 72mm;
+                    margin: 2mm auto;
+                    text-align: center;
+                    color: black !important;
+                    background: white;
+                  }
+                  .header        { font-weight: bold; font-size: 12px; margin-bottom: 10px; line-height: 1.5; }
+                  .queue-number  { font-size: 60px; font-weight: 900; margin-top: 5px; display: block; }
+                  .meta          { font-weight: bold; font-size: 16px; margin-bottom: 0px; }
+                  .transaction-name { font-weight: bold; font-size: 20px; margin-bottom: 5px; }
+                  .footer        { font-weight: bold; font-size: 12px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 5px; }
+                  .reprint-note  { font-size: 11px; color: #000000; margin-top: 4px; }
+                </style>
+              </head>
+              <body>
+                <div class="header">Professional Regulation Commission</div>
+                <div class="meta">${ticket.created_at}</div>
+                <div class="queue-number">${ticket.queue_number}</div>
+                <div class="transaction-name">${ticket.transaction_name}${ticket.priority_name ? ' (' + ticket.priority_name + ')' : ''}</div>
+                <div class="footer">Please wait for your number to be called.<br><br></div>
+                <div class="reprint-note">[RE-PRINT]</div>
+                <script>
+                  window.onload = function() { window.focus(); window.print(); };
+                <\/script>
+              </body>
+              </html>
+            `);
         doc.close();
       }
 
@@ -572,20 +572,20 @@
             : '';
 
           const $item = $(`
-                <button type="button"
-                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-start py-2 px-3 reprint-item"
-                        data-ticket='${JSON.stringify(t).replace(/'/g, "&#39;")}'>
-                  <div class="text-start">
-                    <span class="fw-bold fs-5">${t.queue_number}</span>
-                    ${nameHtml}
-                    ${txHtml}
-                  </div>
-                  <div class="text-end text-nowrap ms-2">
-                    ${statusBadge(t.status)}
-                    <br><small class="text-muted">${t.created_at}</small>
-                  </div>
-                </button>
-              `);
+                    <button type="button"
+                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-start py-2 px-3 reprint-item"
+                            data-ticket='${JSON.stringify(t).replace(/'/g, "&#39;")}'>
+                      <div class="text-start">
+                        <span class="fw-bold fs-5">${t.queue_number}</span>
+                        ${nameHtml}
+                        ${txHtml}
+                      </div>
+                      <div class="text-end text-nowrap ms-2">
+                        ${statusBadge(t.status)}
+                        <br><small class="text-muted">${t.created_at}</small>
+                      </div>
+                    </button>
+                  `);
           $results.append($item);
         });
       }

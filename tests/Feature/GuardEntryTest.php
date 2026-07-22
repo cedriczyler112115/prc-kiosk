@@ -40,7 +40,7 @@ class GuardEntryTest extends TestCase
         $this->assertDatabaseHas('queues', [
             'transaction_id' => $transaction->id,
             'counter_id' => null,
-            'queue_number' => 'ENG0001',
+            'queue_number' => 'ENG001',
         ]);
     }
 
@@ -75,7 +75,7 @@ class GuardEntryTest extends TestCase
 
         $this->assertDatabaseHas('queues', [
             'transaction_id' => $transaction->id,
-            'queue_number' => 'PT0001',
+            'queue_number' => 'PT001',
             'daily_sequence' => 1,
         ]);
     }
@@ -104,7 +104,7 @@ class GuardEntryTest extends TestCase
 
         $this->assertDatabaseHas('queues', [
             'transaction_id' => $transaction->id,
-            'queue_number' => 'NUR0002',
+            'queue_number' => 'NUR002',
             'daily_sequence' => 2,
         ]);
     }
@@ -126,7 +126,7 @@ class GuardEntryTest extends TestCase
 
         $this->assertDatabaseHas('queues', [
             'transaction_id' => $transaction->id,
-            'queue_number' => 'CRM0001',
+            'queue_number' => 'CRM001',
             'daily_sequence' => 1,
             'created_at' => '2026-03-05 10:00:00',
         ]);
@@ -144,7 +144,7 @@ class GuardEntryTest extends TestCase
         // Should reset to 1
         $this->assertDatabaseHas('queues', [
             'transaction_id' => $transaction->id,
-            'queue_number' => 'CRM0001',
+            'queue_number' => 'CRM001',
             'daily_sequence' => 1,
             'created_at' => '2026-03-06 08:00:00',
         ]);
@@ -167,8 +167,8 @@ class GuardEntryTest extends TestCase
         $this->actingAs($this->user)->postJson(route('queue.guard-entry.store'), ['transaction_id' => $tx1->id, 'name' => 'D One']);
         $this->actingAs($this->user)->postJson(route('queue.guard-entry.store'), ['transaction_id' => $tx2->id, 'name' => 'E Two']);
 
-        $this->assertDatabaseHas('queues', ['queue_number' => 'A0001']);
-        $this->assertDatabaseHas('queues', ['queue_number' => 'B0001']);
+        $this->assertDatabaseHas('queues', ['queue_number' => 'A001']);
+        $this->assertDatabaseHas('queues', ['queue_number' => 'B001']);
     }
 
     public function test_validates_input()
@@ -220,7 +220,7 @@ class GuardEntryTest extends TestCase
         $this->assertDatabaseHas('queues', [
             'transaction_id' => $transaction->id,
             'priority_id' => $priority->id,
-            'queue_number' => 'ENG0001',
+            'queue_number' => 'ENG001',
         ]);
     }
 
@@ -242,7 +242,7 @@ class GuardEntryTest extends TestCase
         $this->assertDatabaseHas('queues', [
             'transaction_id' => $transaction->id,
             'priority_id' => null,
-            'queue_number' => 'ENG0001',
+            'queue_number' => 'ENG001',
         ]);
     }
 }

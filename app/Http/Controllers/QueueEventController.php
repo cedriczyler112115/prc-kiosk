@@ -101,8 +101,9 @@ class QueueEventController extends Controller
                     $lastPing = time();
                 }
 
-                // Sleep to prevent tight loop and high CPU usage
-                sleep(1);
+                // Keep the loop light, but wake frequently enough that call and
+                // re-call announcements feel immediate on the board.
+                usleep(100000); // 100 milliseconds = 0.1 seconds
             }
         });
 

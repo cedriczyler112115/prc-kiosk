@@ -524,7 +524,9 @@
                     alert(json && json.error ? json.error : 'Failed to update status.');
                     li.classList.remove('disabled');
                     li.innerHTML = originalHtml;
+                    return;
                 }
+                fetchData();
             })
             .catch(err => {
                 console.error(err);
@@ -568,8 +570,12 @@
                 if (data.error) {
                     alert(data.error);
                     if (btns) btns.innerHTML = prev;
+                    return;
                 }
-                // SSE handles UI refresh
+                if (action === 'transfer') {
+                    renderCurrent(null);
+                }
+                fetchData();
             })
             .catch(() => {
                 alert('An error occurred. Please try again.');

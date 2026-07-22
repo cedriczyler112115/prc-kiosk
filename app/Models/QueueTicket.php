@@ -12,6 +12,7 @@ class QueueTicket extends Model
 
     protected $fillable = [
         'transaction_id',
+        'original_transaction_id',
         'priority_id',
         'counter_id',
         'queue_number',
@@ -29,6 +30,7 @@ class QueueTicket extends Model
         'waiting_time_seconds',
         'service_time_seconds',
         'is_transfer',
+        'is_skipped_transfer',
         'transfer_service_started_at',
         'transfer_service_completed_at',
         'transfer_service_time_seconds',
@@ -43,6 +45,7 @@ class QueueTicket extends Model
         'transfer_service_started_at' => 'datetime',
         'transfer_service_completed_at' => 'datetime',
         'transaction_id' => 'integer',
+        'original_transaction_id' => 'integer',
         'priority_id' => 'integer',
         'daily_sequence' => 'integer',
         'called_by' => 'integer',
@@ -51,6 +54,7 @@ class QueueTicket extends Model
         'skipped_by' => 'integer',
         'cancelled_by' => 'integer',
         'is_transfer' => 'boolean',
+        'is_skipped_transfer' => 'boolean',
         'waiting_time_seconds' => 'integer',
         'service_time_seconds' => 'integer',
         'transfer_service_time_seconds' => 'integer',
@@ -84,7 +88,7 @@ class QueueTicket extends Model
             if ($trimmed === '') {
                 return $fallback;
             }
-            if (! preg_match('/^-?\d+$/', $trimmed)) {
+            if (!preg_match('/^-?\d+$/', $trimmed)) {
                 return $fallback;
             }
 
@@ -98,7 +102,7 @@ class QueueTicket extends Model
 
     public static function diffSecondsPositive(?Carbon $start, ?Carbon $end, int $fallback = 1): int
     {
-        if (! $start || ! $end) {
+        if (!$start || !$end) {
             return $fallback;
         }
 
@@ -145,14 +149,14 @@ class QueueTicket extends Model
         }
 
         if ($this->status === 'serving') {
-            if (! $this->serving_at) {
+            if (!$this->serving_at) {
                 return null;
             }
 
             return self::diffSecondsPositive($this->serving_at, $now);
         }
 
-        if (! $this->completed_at) {
+        if (!$this->completed_at) {
             return null;
         }
 
@@ -163,7 +167,7 @@ class QueueTicket extends Model
 
     public function effectiveTransferServiceSeconds(): ?int
     {
-        if (! $this->is_transfer) {
+        if (!$this->is_transfer) {
             return null;
         }
 
@@ -182,6 +186,11 @@ class QueueTicket extends Model
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);
+    }
+
+    public function originalTransaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'original_transaction_id');
     }
 
     public function priority(): BelongsTo

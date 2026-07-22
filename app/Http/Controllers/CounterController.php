@@ -235,6 +235,7 @@ class CounterController extends Controller
                 ->orderBy('priorities.priority_level', 'asc')
                 ->orderBy('queues.is_transfer', 'desc')
                 ->orderBy('queues.transfer_priority_score', 'desc')
+                ->orderBy('queues.transfer_classified_at', 'asc')
                 ->orderBy('queues.id', 'asc')
                 ->with(['priority', 'transaction'])
                 ->limit(10)
@@ -290,6 +291,7 @@ class CounterController extends Controller
                 ->orderBy('priorities.priority_level', 'asc')
                 ->orderBy('queues.is_transfer', 'desc')
                 ->orderBy('queues.transfer_priority_score', 'desc')
+                ->orderBy('queues.transfer_classified_at', 'asc')
                 ->orderBy('queues.id', 'asc')
                 ->lockForUpdate()
                 ->first();
@@ -456,12 +458,19 @@ class CounterController extends Controller
                 $ruleKey = $match['rule_key'] ?? null;
                 $computedScore = $match['computed_score'] ?? 0;
 
+                $wasSkipped = ($oldStatus === 'skipped') || ($ticket->skipped_by !== null);
+
+                if (!$ticket->original_transaction_id) {
+                    $ticket->original_transaction_id = $fromId;
+                }
+
                 $ticket->transaction_id = $toId;
                 $ticket->counter_id = null;
                 $ticket->status = 'waiting';
                 $ticket->called_at = null;
                 $ticket->serving_at = null;
                 $ticket->is_transfer = true;
+                $ticket->is_skipped_transfer = $wasSkipped;
                 $ticket->transfer_priority_rule_id = $ruleId;
                 $ticket->transfer_priority_score = $computedScore;
                 $ticket->transfer_classified_at = now();
@@ -486,6 +495,7 @@ class CounterController extends Controller
                     ->orderBy('priorities.priority_level', 'asc')
                     ->orderBy('queues.is_transfer', 'desc')
                     ->orderBy('queues.transfer_priority_score', 'desc')
+                    ->orderBy('queues.transfer_classified_at', 'asc')
                     ->orderBy('queues.id', 'asc')
                     ->pluck('queues.id')
                     ->all();
@@ -518,6 +528,33 @@ class CounterController extends Controller
             }
 
             return response()->json(['error' => 'Transfer failed'], 500);
+        }
+
+        // Clear counter cache for transferring user and all counters in affected transactions
+        if ($user->counter_id) {
+            if ($user->transaction_id) {
+                Cache::forget(self::counterDataCacheKey($user->counter_id, $user->transaction_id));
+            }
+            if (isset($fromId) && $fromId) {
+                Cache::forget(self::counterDataCacheKey($user->counter_id, $fromId));
+            }
+        }
+        try {
+            $txIds = array_filter([$fromId ?? null, $toId ?? null]);
+            if (!empty($txIds)) {
+                $cids = DB::table('users')
+                    ->whereIn('transaction_id', $txIds)
+                    ->whereNotNull('counter_id')
+                    ->pluck('counter_id');
+
+                foreach ($cids as $cid) {
+                    foreach ($txIds as $txId) {
+                        Cache::forget(self::counterDataCacheKey($cid, $txId));
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore
         }
 
         return response()->json(['success' => true]);
@@ -638,7 +675,7 @@ class CounterController extends Controller
         if (! $ticket) {
             return response()->json(['error' => 'No active ticket to re-announce'], 400);
         }
-        \DB::table('queue_logs')->insert([
+        $reannounceLogId = \DB::table('queue_logs')->insertGetId([
             'queue_id' => $ticket->id,
             'action' => 'reannounce',
             'old_status' => $ticket->status,
@@ -649,7 +686,9 @@ class CounterController extends Controller
         ]);
 
         // Trigger SSE update for re-announcement
-        app(\App\Services\QueueEventService::class)->handleReannounce($ticket);
+        app(\App\Services\QueueEventService::class)->handleReannounce($ticket, [
+            'reannounce_log_id' => (int) $reannounceLogId,
+        ]);
 
         return response()->json(['success' => true]);
     }

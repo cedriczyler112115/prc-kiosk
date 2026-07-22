@@ -432,7 +432,7 @@
                     .then(r => r.json())
                     .then(json => {
                         if (json && json.success) {
-                            // Let SSE handle the UI refresh
+                            fetchData();
                         } else {
                             alert(json && json.error ? json.error : 'Failed to update status.');
                             li.classList.remove('disabled');
@@ -487,7 +487,10 @@
                                 buttons.innerHTML = previousButtons;
                             }
                         } else {
-                            // Let SSE handle the UI refresh to avoid double fetching
+                            if (action === 'transfer') {
+                                renderCurrent(null);
+                            }
+                            fetchData();
                         }
                     })
                     .catch(error => {

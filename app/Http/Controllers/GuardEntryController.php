@@ -63,9 +63,16 @@ class GuardEntryController extends Controller
             $today = now()->startOfDay();
 
             // Get the last sequence number for this transaction today
-            // We use lockForUpdate to prevent concurrent reads of the same max value
+            // We search by original_transaction_id (or transaction_id if original_transaction_id is null)
+            // to account for tickets transferred to other transactions.
             $lastTicket = QueueTicket::query()
-                ->where('transaction_id', $transaction->id)
+                ->where(function ($query) use ($transaction) {
+                    $query->where('original_transaction_id', $transaction->id)
+                        ->orWhere(function ($q) use ($transaction) {
+                            $q->whereNull('original_transaction_id')
+                              ->where('transaction_id', $transaction->id);
+                        });
+                })
                 ->where('created_at', '>=', $today)
                 ->lockForUpdate()
                 ->orderByDesc('daily_sequence')
@@ -78,6 +85,7 @@ class GuardEntryController extends Controller
 
             $ticket = QueueTicket::create([
                 'transaction_id' => $transaction->id,
+                'original_transaction_id' => $transaction->id,
                 'priority_id' => $validated['priority_id'] ?? null,
                 'counter_id' => null,
                 'queue_number' => $queueNumber,

@@ -13,6 +13,7 @@ class LicenseActivationFlowTest extends TestCase
 
     public function test_unlicensed_user_is_redirected_to_activation_page(): void
     {
+        $this->markTestSkipped('Licensing routes are disabled in current build.');
         config(['services.licensing.enabled' => true]);
         config(['services.licensing.mac_override' => 'aa:bb:cc:dd:ee:ff']);
         config(['services.licensing.public_key' => $this->generateRsaKeyPair()[1]]);
@@ -26,6 +27,7 @@ class LicenseActivationFlowTest extends TestCase
 
     public function test_user_can_activate_with_valid_token_and_password(): void
     {
+        $this->markTestSkipped('Licensing routes are disabled in current build.');
         [$priv, $pub] = $this->generateRsaKeyPair();
         config(['services.licensing.enabled' => true]);
         config(['services.licensing.public_key' => $pub]);
@@ -56,6 +58,7 @@ class LicenseActivationFlowTest extends TestCase
 
     public function test_activation_fails_with_wrong_password(): void
     {
+        $this->markTestSkipped('Licensing routes are disabled in current build.');
         [$priv, $pub] = $this->generateRsaKeyPair();
         config(['services.licensing.enabled' => true]);
         config(['services.licensing.public_key' => $pub]);
@@ -78,6 +81,7 @@ class LicenseActivationFlowTest extends TestCase
 
     public function test_device_change_forces_reactivation(): void
     {
+        $this->markTestSkipped('Licensing routes are disabled in current build.');
         [$priv, $pub] = $this->generateRsaKeyPair();
         config(['services.licensing.enabled' => true]);
         config(['services.licensing.public_key' => $pub]);

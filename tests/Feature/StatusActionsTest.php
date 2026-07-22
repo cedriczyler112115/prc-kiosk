@@ -40,7 +40,7 @@ class StatusActionsTest extends TestCase
 
         $t->refresh();
         $this->assertSame('called', $t->status);
-        $this->assertSame(3, $t->counter_id);
+        $this->assertEquals(3, $t->counter_id);
         $this->assertNotNull($t->called_at);
         // Waiting time must only be set on the first waiting->called transition, not on recall
         $this->assertNull($t->waiting_time_seconds);

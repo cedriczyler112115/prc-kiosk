@@ -135,6 +135,7 @@ class QueueBoardController extends Controller
                     ->orderBy('priorities.priority_level', 'asc')
                     ->orderBy('queues.is_transfer', 'desc')
                     ->orderBy('queues.transfer_priority_score', 'desc')
+                    ->orderBy('queues.transfer_classified_at', 'asc')
                     ->orderBy('queues.id', 'asc')
                     ->limit(5)
                     ->get()

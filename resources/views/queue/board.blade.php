@@ -1283,7 +1283,6 @@
                             success: function (response) {
                                 $('.status-dot').removeClass('offline').css('background-color', '#198754');
                                 $('#status-text').text('Connected');
-                                renderTransactions(response.transactions);
 
                                 if (isFirstLoad) {
                                     // Populate lastAnnouncements to prevent flood, but DO NOT announce
@@ -1315,6 +1314,8 @@
                                     detectNewCallsAndAnnounce(response.transactions);
                                     processReannouncements(response.reannouncements || []);
                                 }
+
+                                renderTransactions(response.transactions);
                             },
                             error: function (err) {
                                 console.error("Failed to fetch queue data", err);
@@ -1327,6 +1328,68 @@
                     // Track recent calls to avoid duplicate announcements
                     const lastAnnouncements = new Map(); // key: transactionId, value: {queue_number, called_at}
                     const seenReannounceIds = new Set();
+
+                    function buildAnnouncement(queueNumber, counterName, fallbackAnnouncement) {
+                        if (fallbackAnnouncement) {
+                            return fallbackAnnouncement;
+                        }
+
+                        const counterDigits = String(counterName || '').match(/\d+/);
+                        const counterNumber = counterDigits ? counterDigits[0] : (counterName || '');
+                        return 'Queue number ' + (queueNumber || '') + ', please proceed to counter number ' + counterNumber + '.';
+                    }
+
+                    function rememberLatestCall(transactionId, queueNumber, counterName, calledAt) {
+                        const key = String(transactionId) + '-' + queueNumber + '-' + counterName;
+                        const current = {
+                            queue_number: queueNumber || '',
+                            called_at: calledAt || '',
+                            counter_name: counterName || ''
+                        };
+                        const prev = lastAnnouncements.get(key);
+                        const changed = !prev
+                            || prev.queue_number !== current.queue_number
+                            || prev.called_at !== current.called_at;
+
+                        lastAnnouncements.set(key, current);
+
+                        return changed;
+                    }
+
+                    function announceQueueEvent(payload) {
+                        if (!payload || !payload.queue_number) {
+                            return;
+                        }
+
+                        const counterName = payload.counter_name || (payload.counter_id ? ('Counter ' + payload.counter_id) : 'Counter ?');
+
+                        if (payload.event_type === 'reannounce') {
+                            const reannounceId = parseInt(payload.reannounce_log_id, 10);
+                            if (!Number.isNaN(reannounceId) && seenReannounceIds.has(reannounceId)) {
+                                return;
+                            }
+                            if (!Number.isNaN(reannounceId)) {
+                                seenReannounceIds.add(reannounceId);
+                            }
+                            ttsEnqueue(buildAnnouncement(payload.queue_number, counterName, payload.announcement));
+                            return;
+                        }
+
+                        if (payload.status !== 'called' || !payload.transaction_id) {
+                            return;
+                        }
+
+                        const changed = rememberLatestCall(
+                            payload.transaction_id,
+                            payload.queue_number,
+                            counterName,
+                            payload.called_at || payload.updated_at || ''
+                        );
+
+                        if (changed) {
+                            ttsEnqueue(buildAnnouncement(payload.queue_number, counterName, payload.announcement));
+                        }
+                    }
 
                     function detectNewCallsAndAnnounce(transactions) {
                         if (!transactions || !Array.isArray(transactions)) return;
@@ -1348,11 +1411,7 @@
                                 if (changed && ticket.queue_number && ticket.counter_name) {
                                     console.log("New call detected:", current);
                                     lastAnnouncements.set(key, current);
-                                    const spoken = ticket.announcement || (() => {
-                                        const counterDigits = String(current.counter_name).match(/\d+/);
-                                        const counterNumber = counterDigits ? counterDigits[0] : current.counter_name;
-                                        return 'Queue number ' + current.queue_number + ', please proceed to counter number ' + counterNumber + '.';
-                                    })();
+                                    const spoken = buildAnnouncement(current.queue_number, current.counter_name, ticket.announcement);
                                     ttsEnqueue(spoken);
                                 }
                             });
@@ -1365,11 +1424,7 @@
                         items.forEach(ev => {
                             if (seenReannounceIds.has(ev.id)) return;
                             seenReannounceIds.add(ev.id);
-                            const spoken = ev.announcement || (() => {
-                                const counterDigits = String(ev.counter_name || '').match(/\d+/);
-                                const counterNumber = counterDigits ? counterDigits[0] : (ev.counter_name || '');
-                                return 'Queue number ' + ev.queue_number + ', please proceed to counter number ' + counterNumber + '.';
-                            })();
+                            const spoken = buildAnnouncement(ev.queue_number, ev.counter_name, ev.announcement);
                             ttsEnqueue(spoken);
                         });
                         // trim set to avoid infinite growth
@@ -1649,6 +1704,11 @@
 
                     eventSource.addEventListener('queue_updated', function (e) {
                         console.log('Queue Updated Event:', e.data);
+                        try {
+                            announceQueueEvent(JSON.parse(e.data));
+                        } catch (err) {
+                            console.warn('Queue Updated Event parse error:', err);
+                        }
                         fetchQueueData();
                     });
 

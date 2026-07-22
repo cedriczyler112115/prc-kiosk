@@ -32,28 +32,46 @@ class QueueEventService
     /**
      * Handle explicit re-announce requests.
      */
-    public function handleReannounce(QueueTicket $ticket)
+    public function handleReannounce(QueueTicket $ticket, array $meta = [])
     {
-        $payload = $this->formatPayload($ticket, 'reannounce');
+        $payload = $this->formatPayload($ticket, 'reannounce', $meta);
         $this->broadcastEvent('queue_updated', $payload);
     }
 
     /**
      * Format the queue ticket data into a structured payload.
      */
-    protected function formatPayload(QueueTicket $ticket, string $type): array
+    protected function formatPayload(QueueTicket $ticket, string $type, array $meta = []): array
     {
-        return [
+        $payload = [
             'id'             => $ticket->id,
             'queue_number'   => $ticket->queue_number,
             'status'         => $ticket->status,
             'counter_id'     => $ticket->counter_id,
+            'counter_name'   => $ticket->counter_id ? ('Counter ' . (string) $ticket->counter_id) : 'Counter ?',
             'priority_id'    => $ticket->priority_id,
             'name'           => $ticket->name,
             'transaction_id' => $ticket->transaction_id,
+            'called_at'      => $ticket->called_at ? $ticket->called_at->toIso8601String() : null,
             'updated_at'     => $ticket->updated_at ? $ticket->updated_at->toIso8601String() : now()->toIso8601String(),
+            'announcement'   => $this->buildAnnouncement($ticket),
             'event_type'     => $type,
         ];
+
+        if ($meta !== []) {
+            $payload = array_merge($payload, $meta);
+        }
+
+        return $payload;
+    }
+
+    private function buildAnnouncement(QueueTicket $ticket): string
+    {
+        $queueNumber = trim((string) ($ticket->queue_number ?? ''));
+        $counterNumber = $ticket->counter_id ? (string) $ticket->counter_id : '?';
+        $base = "Queue number {$queueNumber}, please proceed to counter number {$counterNumber}";
+
+        return QueueBoardController::applyPriorityLaneSuffix($base, $ticket->priority_id);
     }
 
     /**
@@ -96,7 +114,6 @@ class QueueEventService
         // We resolve active counters directly from DB — this is a single cheap
         // query that only runs when a real event fires (not on every poll).
         try {
-            $transactionId = $payload['counter_id'] ?? null;
             $ticketCounterId = $payload['counter_id'] ?? null;
             $ticketTransactionId = $payload['transaction_id'] ?? null;
 

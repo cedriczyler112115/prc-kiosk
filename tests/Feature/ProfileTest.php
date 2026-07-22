@@ -39,7 +39,7 @@ class ProfileTest extends TestCase
             'name' => 'Doe, John Mark',
             'email' => 'changed@example.com', // Should be ignored
             'transaction_id' => $transaction->id,
-            'counter_id' => 5,
+            'counter_id' => '5',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -50,7 +50,7 @@ class ProfileTest extends TestCase
         $this->assertSame('Doe, John Mark', $user->name);
         $this->assertSame($originalEmail, $user->email); // Ensure email didn't change
         $this->assertSame($transaction->id, $user->transaction_id);
-        $this->assertSame(5, $user->counter_id);
+        $this->assertSame('5', $user->counter_id);
     }
 
     public function test_profile_update_validation()

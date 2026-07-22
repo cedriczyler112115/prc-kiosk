@@ -5,24 +5,23 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         $isSqlite = DB::getDriverName() === 'sqlite';
 
         if (Schema::hasTable('counters')) {
-            if (! $isSqlite && Schema::hasTable('users') && Schema::hasColumn('users', 'counter_id') && Schema::hasColumn('counters', 'counter_number')) {
+            if (!$isSqlite && Schema::hasTable('users') && Schema::hasColumn('users', 'counter_id') && Schema::hasColumn('counters', 'counter_number')) {
                 DB::statement('UPDATE users u JOIN counters c ON u.counter_id = c.id SET u.counter_id = c.counter_number WHERE u.counter_id IS NOT NULL');
             }
 
-            if (! $isSqlite && Schema::hasTable('queues') && Schema::hasColumn('queues', 'counter_id') && Schema::hasColumn('counters', 'counter_number')) {
+            if (!$isSqlite && Schema::hasTable('queues') && Schema::hasColumn('queues', 'counter_id') && Schema::hasColumn('counters', 'counter_number')) {
                 DB::statement('UPDATE queues q JOIN counters c ON q.counter_id = c.id SET q.counter_id = c.counter_number WHERE q.counter_id IS NOT NULL');
             }
         }
 
         if (Schema::hasTable('users') && Schema::hasColumn('users', 'counter_id')) {
-            if (! $isSqlite) {
+            if (!$isSqlite) {
                 try {
                     Schema::table('users', function (Blueprint $table) {
                         $table->dropForeign(['counter_id']);
@@ -48,7 +47,7 @@ return new class extends Migration
             } catch (\Throwable $e) {
                 // If change() fails (e.g. SQLite without doctrine/dbal), we might skip or use raw SQL if possible.
                 // In SQLite, types are dynamic anyway.
-                if (! $isSqlite) {
+                if (!$isSqlite) {
                     DB::statement('ALTER TABLE users MODIFY counter_id INT UNSIGNED NULL');
                 }
             }
@@ -63,7 +62,7 @@ return new class extends Migration
         }
 
         if (Schema::hasTable('queues') && Schema::hasColumn('queues', 'counter_id')) {
-            if (! $isSqlite) {
+            if (!$isSqlite) {
                 try {
                     Schema::table('queues', function (Blueprint $table) {
                         $table->dropForeign(['counter_id']);
@@ -81,7 +80,7 @@ return new class extends Migration
                     $table->integer('counter_id')->unsigned()->nullable()->change();
                 });
             } catch (\Throwable $e) {
-                if (! $isSqlite) {
+                if (!$isSqlite) {
                     DB::statement('ALTER TABLE queues MODIFY counter_id INT UNSIGNED NULL');
                 }
             }
@@ -99,7 +98,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (! Schema::hasTable('counters')) {
+        if (!Schema::hasTable('counters')) {
             Schema::create('counters', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('transaction_id')->nullable();

@@ -73,8 +73,8 @@ class GuardEntryController extends Controller
 
             $nextSequence = ($lastTicket ? $lastTicket->daily_sequence : 0) + 1;
 
-            // Format: CODE + 4-digit sequence (e.g. ABC0005)
-            $queueNumber = $transaction->code.str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+            // Format: CODE + 3-digit sequence (e.g. ABC005)
+            $queueNumber = $transaction->code . str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
 
             $ticket = QueueTicket::create([
                 'transaction_id' => $transaction->id,
@@ -120,6 +120,71 @@ class GuardEntryController extends Controller
         });
     }
 
+    public function reprint(Request $request)
+    {
+        $validated = $request->validate([
+            'queue_number' => ['required', 'string', 'max:20'],
+        ]);
+
+        $today = now()->startOfDay();
+
+        $ticket = QueueTicket::query()
+            ->with(['transaction', 'priority'])
+            ->where('queue_number', strtoupper(trim($validated['queue_number'])))
+            ->where('created_at', '>=', $today)
+            ->first();
+
+        if (!$ticket) {
+            return response()->json(['message' => 'Queue number not found for today.'], 404);
+        }
+
+        return response()->json([
+            'ticket' => [
+                'id' => $ticket->id,
+                'queue_number' => $ticket->queue_number,
+                'created_at' => $ticket->created_at->format('m/d/Y h:i A'),
+                'transaction_name' => $ticket->transaction?->name ?? '',
+                'priority_name' => $ticket->priority?->name ?? '',
+                'name' => $ticket->name ?? '',
+                'status' => $ticket->status,
+            ],
+        ]);
+    }
+
+    public function todayTickets(Request $request)
+    {
+        $today = now()->startOfDay();
+
+        $q = trim((string) $request->query('q', ''));
+
+        $tickets = QueueTicket::query()
+            ->with(['transaction', 'priority'])
+            ->where('created_at', '>=', $today)
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('queue_number', 'like', "%{$q}%")
+                        ->orWhere('name', 'like', "%{$q}%");
+                });
+            })
+            ->orderBy('daily_sequence')
+            ->limit(50)
+            ->get(['id', 'queue_number', 'name', 'status', 'transaction_id', 'priority_id', 'created_at']);
+
+        return response()->json([
+            'tickets' => $tickets->map(function ($t) {
+                return [
+                    'id' => $t->id,
+                    'queue_number' => $t->queue_number,
+                    'name' => $t->name ?? '',
+                    'status' => $t->status,
+                    'transaction_name' => $t->transaction?->name ?? '',
+                    'priority_name' => $t->priority?->name ?? '',
+                    'created_at' => $t->created_at->format('m/d/Y h:i A'),
+                ];
+            }),
+        ]);
+    }
+
     public function summary()
     {
         $transactions = Transaction::query()
@@ -149,7 +214,7 @@ class GuardEntryController extends Controller
     {
         $perPage = (int) $request->query('per_page', 10);
         $allowedPerPage = [10, 25, 50, 100];
-        if (! in_array($perPage, $allowedPerPage, true)) {
+        if (!in_array($perPage, $allowedPerPage, true)) {
             $perPage = 10;
         }
 

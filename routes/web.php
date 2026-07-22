@@ -45,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('queue')->name('queue.')->group(function () {
         Route::get('/guard-entry', [GuardEntryController::class, 'index'])->name('guard-entry');
         Route::post('/guard-entry', [GuardEntryController::class, 'store'])->name('guard-entry.store');
+        Route::get('/guard-entry/reprint', [GuardEntryController::class, 'reprint'])->name('guard-entry.reprint');
+        Route::get('/guard-entry/today-tickets', [GuardEntryController::class, 'todayTickets'])->name('guard-entry.today-tickets');
         Route::get('/guard-summary/data', [GuardEntryController::class, 'summaryData'])->name('guard-summary.data');
         Route::get('/guard-summary', [GuardEntryController::class, 'summary'])->name('guard-summary');
 
